@@ -29,6 +29,13 @@ import {
   type Objective,
 } from "@/server/testboard";
 import { updateSheetData } from "@/server/sheet";
+import {
+  inviteMember,
+  joinTeam,
+  leaveTeam,
+  renameTeam,
+  revokeInvitation,
+} from "@/server/team";
 import type { ActionResult } from "@/types";
 
 // Server Actions : la seule porte d'entrée des mutations depuis l'UI.
@@ -62,9 +69,15 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
   await signIn("credentials", {
     email: parsed.data.email,
     password: parsed.data.password,
-    redirectTo: "/dashboard",
+    redirectTo: safeRedirect(formData.get("callbackUrl")),
   });
   return { ok: true };
+}
+
+// N'autorise que des chemins internes en redirection (pas d'URL externe).
+function safeRedirect(value: FormDataEntryValue | null): string {
+  const v = typeof value === "string" ? value : "";
+  return v.startsWith("/") && !v.startsWith("//") ? v : "/dashboard";
 }
 
 export async function loginAction(formData: FormData): Promise<ActionResult> {
@@ -72,7 +85,7 @@ export async function loginAction(formData: FormData): Promise<ActionResult> {
     await signIn("credentials", {
       email: formData.get("email"),
       password: formData.get("password"),
-      redirectTo: "/dashboard",
+      redirectTo: safeRedirect(formData.get("callbackUrl")),
     });
     return { ok: true };
   } catch (error) {
@@ -296,6 +309,71 @@ export async function saveSheetDataAction(
   }
   try {
     await updateSheetData(roadmapId, session.user.tenantId, data);
+    return { ok: true };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+// ── Espaces d'équipe partagés ────────────────────────────────────────────────
+
+export async function renameTeamAction(formData: FormData): Promise<ActionResult> {
+  const { tenantId } = await requireUser();
+  try {
+    await renameTeam(tenantId, String(formData.get("name") ?? ""));
+    revalidatePath("/settings");
+    return { ok: true };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+export async function inviteMemberAction(formData: FormData): Promise<ActionResult> {
+  const { userId, tenantId } = await requireUser();
+  const email = String(formData.get("email") ?? "");
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) {
+    return { ok: false, error: "Email invalide" };
+  }
+  try {
+    await inviteMember(userId, tenantId, email);
+    revalidatePath("/settings");
+    return { ok: true };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+export async function revokeInvitationAction(
+  invitationId: string
+): Promise<ActionResult> {
+  const { tenantId } = await requireUser();
+  try {
+    await revokeInvitation(invitationId, tenantId);
+    revalidatePath("/settings");
+    return { ok: true };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+export async function joinTeamAction(token: string): Promise<ActionResult> {
+  const { userId } = await requireUser();
+  try {
+    await joinTeam(userId, token);
+    revalidatePath("/dashboard");
+    revalidatePath("/settings");
+    return { ok: true };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+export async function leaveTeamAction(): Promise<ActionResult> {
+  const { userId, tenantId } = await requireUser();
+  try {
+    await leaveTeam(userId, tenantId);
+    revalidatePath("/dashboard");
+    revalidatePath("/settings");
     return { ok: true };
   } catch (error) {
     return toError(error);
