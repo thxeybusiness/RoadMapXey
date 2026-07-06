@@ -90,7 +90,7 @@ export default async function DashboardPage({
                           {roadmap.type === "test"
                             ? "Canvas"
                             : roadmap.type === "test2"
-                              ? "Test 2"
+                              ? "Feuille de calcul"
                               : "Tableau"}
                           )
                         </span>

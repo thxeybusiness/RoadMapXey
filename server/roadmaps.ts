@@ -26,6 +26,7 @@ export async function getRoadmap(id: string, tenantId: string) {
       dayBlocks: { orderBy: [{ day: "asc" }, { startMinutes: "asc" }] },
       testNodes: { orderBy: { createdAt: "asc" } },
       testEdges: true,
+      sheetCells: true,
     },
   });
 }

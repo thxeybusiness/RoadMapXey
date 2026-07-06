@@ -28,6 +28,8 @@ import {
   updateTestNode,
   type Objective,
 } from "@/server/testboard";
+import { upsertSheetCell } from "@/server/sheet";
+import type { CellStyle } from "@/lib/sheet";
 import type { ActionResult } from "@/types";
 
 // Server Actions : la seule porte d'entrée des mutations depuis l'UI.
@@ -275,6 +277,23 @@ export async function deleteTestEdgeAction(edgeId: string): Promise<ActionResult
   const { tenantId } = await requireUser();
   try {
     await deleteTestEdge(edgeId, tenantId);
+    return { ok: true };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+// ── Feuille de calcul ────────────────────────────────────────────────────────
+
+export async function updateSheetCellAction(
+  roadmapId: string,
+  ref: string,
+  value: string,
+  style: CellStyle | null
+): Promise<ActionResult> {
+  const { tenantId } = await requireUser();
+  try {
+    await upsertSheetCell(roadmapId, tenantId, ref, value, style);
     return { ok: true };
   } catch (error) {
     return toError(error);
