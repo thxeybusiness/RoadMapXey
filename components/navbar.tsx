@@ -17,7 +17,7 @@ export async function Navbar() {
         </Link>
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" size="sm">
-            <Link href="/pricing">Tarifs</Link>
+            <Link href="/pricing">Forfaits</Link>
           </Button>
           {session?.user ? (
             <>
