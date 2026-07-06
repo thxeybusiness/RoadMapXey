@@ -165,10 +165,10 @@ export function RoadmapBoard({
           {todayPct !== null && (
             <div
               aria-hidden
-              className="pointer-events-none absolute bottom-0 top-14 z-20 w-px bg-violet-500/70"
+              className="pointer-events-none absolute bottom-0 top-14 z-20 w-px bg-emerald-500/70"
               style={{ left: `${todayPct}%` }}
             >
-              <span className="absolute -left-1.5 -top-1.5 h-3 w-3 rounded-full bg-violet-500 ring-2 ring-white dark:ring-zinc-950" />
+              <span className="absolute -left-1.5 -top-1.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-950" />
             </div>
           )}
 
@@ -187,9 +187,9 @@ export function RoadmapBoard({
                 className={cn(
                   "border-l border-zinc-200 px-1 py-2 text-center first:border-l-0 dark:border-zinc-800",
                   b.isWeekend && "bg-zinc-100/70 dark:bg-zinc-900/50",
-                  clickable && "cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-950/30",
+                  clickable && "cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-950/30",
                   b.isNow
-                    ? "font-semibold text-violet-600 dark:text-violet-300"
+                    ? "font-semibold text-emerald-600 dark:text-emerald-300"
                     : "text-zinc-500"
                 )}
               >

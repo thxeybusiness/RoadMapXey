@@ -1,10 +1,10 @@
 import { Crown, Star } from "lucide-react";
 import { GRADE_LABEL, type Grade } from "@/lib/grades";
 
-// Badge de grade : Fondateur (violet/or) ou VIP (or). Accès illimité.
+// Badge de grade : Fondateur (vert) ou VIP (or). Accès illimité.
 const STYLES: Record<Grade, { className: string; Icon: typeof Crown }> = {
   founder: {
-    className: "bg-gradient-to-r from-amber-400 via-orange-400 to-violet-500",
+    className: "bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-600",
     Icon: Crown,
   },
   vip: {

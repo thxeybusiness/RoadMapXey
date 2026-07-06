@@ -48,7 +48,7 @@ export function UserMenu({
         aria-label="Menu du compte"
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-300 text-base font-semibold text-zinc-900 transition hover:border-violet-400 hover:text-violet-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 dark:border-zinc-700 dark:text-zinc-100"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-300 text-base font-semibold text-zinc-900 transition hover:border-emerald-400 hover:text-emerald-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:border-zinc-700 dark:text-zinc-100"
       >
         {initial}
       </button>
