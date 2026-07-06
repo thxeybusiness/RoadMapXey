@@ -1,42 +1,24 @@
 import { prisma } from "@/lib/prisma";
-import { parseRef, type CellStyle } from "@/lib/sheet";
 import { Prisma } from "@prisma/client";
 
-// Feuille de calcul : une ligne SheetCell par cellule non vide,
-// scopée au tenant via la roadmap.
+// Feuille de calcul (moteur Univer) : le classeur complet est stocké en
+// snapshot JSON sur la roadmap, scopé au tenant.
 
-export async function upsertSheetCell(
+const MAX_SNAPSHOT_BYTES = 8_000_000; // ~8 Mo, large pour un classeur
+
+export async function updateSheetData(
   roadmapId: string,
   tenantId: string,
-  ref: string,
-  value: string,
-  style: CellStyle | null
+  data: unknown
 ) {
-  const normalized = ref.toUpperCase();
-  if (!parseRef(normalized)) throw new Error("Référence de cellule invalide");
-
-  const roadmap = await prisma.roadmap.findFirst({
-    where: { id: roadmapId, tenantId },
-    select: { id: true },
-  });
-  if (!roadmap) throw new Error("Roadmap introuvable");
-
-  const trimmedValue = value.slice(0, 500);
-  const hasStyle =
-    style && Object.values(style).some((v) => v !== undefined && v !== null && v !== false);
-
-  // Cellule vide et sans style → on supprime la ligne.
-  if (trimmedValue === "" && !hasStyle) {
-    await prisma.sheetCell.deleteMany({
-      where: { roadmapId: roadmap.id, ref: normalized },
-    });
-    return;
+  const serialized = JSON.stringify(data);
+  if (serialized.length > MAX_SNAPSHOT_BYTES) {
+    throw new Error("Feuille trop volumineuse pour être sauvegardée");
   }
 
-  const styleJson = (hasStyle ? style : Prisma.JsonNull) as Prisma.InputJsonValue;
-  await prisma.sheetCell.upsert({
-    where: { roadmapId_ref: { roadmapId: roadmap.id, ref: normalized } },
-    create: { roadmapId: roadmap.id, ref: normalized, value: trimmedValue, style: styleJson },
-    update: { value: trimmedValue, style: styleJson },
+  const result = await prisma.roadmap.updateMany({
+    where: { id: roadmapId, tenantId },
+    data: { sheetData: JSON.parse(serialized) as Prisma.InputJsonValue },
   });
+  if (result.count === 0) throw new Error("Roadmap introuvable");
 }

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/session";
-import { signIn, signOut } from "@/lib/auth";
+import { auth, signIn, signOut } from "@/lib/auth";
 import {
   dayBlockSchema,
   roadmapItemSchema,
@@ -28,8 +28,7 @@ import {
   updateTestNode,
   type Objective,
 } from "@/server/testboard";
-import { upsertSheetCell } from "@/server/sheet";
-import type { CellStyle } from "@/lib/sheet";
+import { updateSheetData } from "@/server/sheet";
 import type { ActionResult } from "@/types";
 
 // Server Actions : la seule porte d'entrée des mutations depuis l'UI.
@@ -283,17 +282,20 @@ export async function deleteTestEdgeAction(edgeId: string): Promise<ActionResult
   }
 }
 
-// ── Feuille de calcul ────────────────────────────────────────────────────────
+// ── Feuille de calcul (snapshot Univer) ─────────────────────────────────────
 
-export async function updateSheetCellAction(
+export async function saveSheetDataAction(
   roadmapId: string,
-  ref: string,
-  value: string,
-  style: CellStyle | null
+  data: unknown
 ): Promise<ActionResult> {
-  const { tenantId } = await requireUser();
+  // Pas de redirect ici : si la session a expiré en pleine édition, on
+  // renvoie une erreur affichable au lieu de détourner la page.
+  const session = await auth();
+  if (!session?.user?.tenantId) {
+    return { ok: false, error: "Session expirée — reconnectez-vous" };
+  }
   try {
-    await upsertSheetCell(roadmapId, tenantId, ref, value, style);
+    await updateSheetData(roadmapId, session.user.tenantId, data);
     return { ok: true };
   } catch (error) {
     return toError(error);

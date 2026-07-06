@@ -6,9 +6,8 @@ import { requireUser } from "@/lib/session";
 import { getRoadmap } from "@/server/roadmaps";
 import { RoadmapBoard } from "@/components/roadmap-board";
 import { NodeBoard } from "@/components/node-board";
-import { SheetBoard } from "@/components/sheet-board";
+import { ExcelBoardLazy } from "@/components/excel-board-lazy";
 import { ItemForm } from "@/components/item-form";
-import type { CellStyle } from "@/lib/sheet";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Roadmap" };
@@ -58,14 +57,7 @@ export default async function RoadmapPage({
       </div>
 
       {roadmap.type === "test2" ? (
-        <SheetBoard
-          roadmapId={roadmap.id}
-          initialCells={roadmap.sheetCells.map((c) => ({
-            ref: c.ref,
-            value: c.value,
-            style: (c.style as CellStyle | null) ?? null,
-          }))}
-        />
+        <ExcelBoardLazy roadmapId={roadmap.id} initialData={roadmap.sheetData} />
       ) : roadmap.type === "test" ? (
         <NodeBoard
           roadmapId={roadmap.id}
