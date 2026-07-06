@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { saveSheetDataAction } from "@/server/actions";
+import { roadmapTheme } from "@/lib/univer-theme";
 
 import "@univerjs/presets/lib/styles/preset-sheets-core.css";
 import "@univerjs/presets/lib/styles/preset-sheets-conditional-formatting.css";
@@ -90,8 +91,15 @@ export function ExcelBoard({
       if (disposed || !containerRef.current) return;
 
       const { createUniver, LocaleType, mergeLocales } = presets;
+      const darkMode =
+        typeof document !== "undefined" &&
+        (document.documentElement.getAttribute("data-theme") === "dark" ||
+          (document.documentElement.getAttribute("data-theme") !== "light" &&
+            window.matchMedia?.("(prefers-color-scheme: dark)").matches));
       const result = createUniver({
         locale: LocaleType.FR_FR,
+        theme: roadmapTheme,
+        darkMode,
         locales: {
           [LocaleType.FR_FR]: mergeLocales(
             frFR.default,
@@ -168,13 +176,25 @@ export function ExcelBoard({
   }, [roadmapId]);
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-zinc-400">
-          Feuille de calcul complète : formules (=SOMME…), poignée de recopie,
-          fusion, filtres, tri, formats, mise en forme conditionnelle,
-          commentaires, images… Clic droit pour le menu contextuel.
-        </p>
+    // Pleine largeur : on casse la contrainte max-w du conteneur de page.
+    <div className="relative left-1/2 w-[100vw] -translate-x-1/2 space-y-2 px-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-3 text-xs text-zinc-400">
+          <span>Légende des fonds :</span>
+          {[
+            { name: "Violet", class: "bg-violet-300" },
+            { name: "Bleu", class: "bg-blue-300" },
+            { name: "Vert", class: "bg-emerald-300" },
+            { name: "Ambre", class: "bg-amber-300" },
+            { name: "Rose", class: "bg-rose-300" },
+            { name: "Cyan", class: "bg-cyan-300" },
+          ].map((c) => (
+            <span key={c.name} className="flex items-center gap-1">
+              <span className={`h-3 w-3 rounded-full ${c.class}`} />
+              {c.name}
+            </span>
+          ))}
+        </div>
         <span className="text-xs text-zinc-400">
           {saveState === "saving" && "Enregistrement…"}
           {saveState === "saved" && "✓ Enregistré"}
@@ -183,15 +203,15 @@ export function ExcelBoard({
           )}
         </span>
       </div>
-      <div className="overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800">
+      <div className="overflow-hidden rounded-2xl border border-zinc-200 shadow-sm dark:border-zinc-800">
         {!ready && (
-          <div className="flex h-[75vh] items-center justify-center text-sm text-zinc-400">
+          <div className="flex h-[86vh] items-center justify-center text-sm text-zinc-400">
             Chargement de la feuille de calcul…
           </div>
         )}
         <div
           ref={containerRef}
-          style={{ height: ready ? "75vh" : 0 }}
+          style={{ height: ready ? "86vh" : 0 }}
           className="univer-container"
         />
       </div>
