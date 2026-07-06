@@ -7,11 +7,12 @@ import type { RoadmapItem } from "@prisma/client";
 
 export type Scale = "day" | "week" | "month" | "year";
 
+// Échelles proposées dans le sélecteur (l'année sert de navigation via les
+// flèches et le menu déroulant, pas d'un onglet dédié).
 export const SCALES: { value: Scale; label: string }[] = [
   { value: "day", label: "Jour" },
   { value: "week", label: "Semaine" },
   { value: "month", label: "Mois" },
-  { value: "year", label: "Année" },
 ];
 
 // Largeur mini d'une colonne selon l'échelle (px).
