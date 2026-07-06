@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { checkoutSchema } from "@/lib/validations";
+import { getBaseUrl } from "@/lib/env";
 
 // Crée une session Stripe Checkout pour l'utilisateur connecté.
 // Le priceId vient du dashboard Stripe (jamais de montant en dur ici).
@@ -26,8 +27,8 @@ export async function POST(req: Request) {
     const checkout = await stripe.checkout.sessions.create({
       mode: "subscription",
       line_items: [{ price: parsed.data.priceId, quantity: 1 }],
-      success_url: `${process.env.NEXT_PUBLIC_URL}/dashboard?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_URL}/pricing`,
+      success_url: `${getBaseUrl()}/dashboard?success=true`,
+      cancel_url: `${getBaseUrl()}/pricing`,
       client_reference_id: session.user.id,
       customer: existing?.stripeCustomerId || undefined,
       customer_email: existing ? undefined : session.user.email ?? undefined,
