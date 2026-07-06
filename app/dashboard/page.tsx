@@ -1,20 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  ArrowRight,
+  FolderKanban,
+  ListChecks,
+  Map,
+  Network,
+  Rocket,
+  Sparkles,
+  Table2,
+} from "lucide-react";
 import { requireUser } from "@/lib/session";
 import { getUserPlan, FREE_LIMITS } from "@/lib/subscription";
-import { gradeOf } from "@/lib/grades";
+import { gradeOf, GRADE_LABEL } from "@/lib/grades";
 import { GradeBadge } from "@/components/grade-badge";
 import { listRoadmaps } from "@/server/roadmaps";
 import { RoadmapForm } from "@/components/roadmap-form";
-import { DeleteRoadmapButton } from "@/components/delete-roadmap-button";
-import { Badge } from "@/components/ui/badge";
+import { RoadmapCard } from "@/components/roadmap-card";
+import { StatCard } from "@/components/stat-card";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -32,31 +36,97 @@ export default async function DashboardPage({
   ]);
   const grade = gradeOf(email);
 
+  const totalItems = roadmaps.reduce((n, r) => n + r._count.items, 0);
+  const boards = roadmaps.filter((r) => r.type === "board").length;
+  const creative = roadmaps.filter(
+    (r) => r.type === "test" || r.type === "test2"
+  ).length;
+
+  const today = new Intl.DateTimeFormat("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date());
+  const atLimit =
+    !grade && plan === "free" && roadmaps.length >= FREE_LIMITS.maxRoadmaps;
+
   return (
-    <div className="mx-auto max-w-6xl space-y-8 px-4 py-12">
+    <div className="mx-auto max-w-6xl space-y-8 px-4 py-8">
       {params.success === "true" && (
-        <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-800">
-          Paiement réussi 🎉 Votre compte passe en Premium dès que Stripe
-          confirme le paiement (quelques secondes).
+        <div className="rb-pop flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-800">
+          <Sparkles className="h-4 w-4" /> Paiement réussi&nbsp;! Votre compte
+          passe en Premium dès la confirmation de Stripe.
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Bonjour {name || "👋"}</h1>
-          <p className="text-zinc-500">Vos roadmaps produit</p>
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <section className="rb-reveal rb-gradient relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-8 text-white shadow-lg shadow-emerald-600/25 sm:p-10">
+        {/* Icônes décoratives flottantes */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.13]">
+          <Map className="rb-float absolute right-10 top-6 h-32 w-32" />
+          <Network
+            className="rb-float absolute bottom-2 right-48 h-20 w-20"
+            style={{ animationDelay: "1.4s" }}
+          />
+          <Table2
+            className="rb-float absolute right-80 top-12 h-14 w-14"
+            style={{ animationDelay: "0.7s" }}
+          />
         </div>
-        {grade ? (
-          <GradeBadge grade={grade} />
-        ) : (
-          <Badge variant={plan === "premium" ? "default" : "secondary"}>
-            {plan === "premium" ? "Premium" : "Gratuit"}
-          </Badge>
-        )}
-      </div>
 
-      {!grade && plan === "free" && roadmaps.length >= FREE_LIMITS.maxRoadmaps && (
-        <div className="flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
+        <div className="relative flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-sm capitalize text-emerald-50/80">{today}</p>
+            <h1 className="mt-1 text-3xl font-bold sm:text-4xl">
+              Bonjour {name || "👋"}
+            </h1>
+            <p className="mt-2 max-w-md text-emerald-50/90">
+              Vos roadmaps produit, réunies au même endroit. Créez, priorisez et
+              avancez.
+            </p>
+          </div>
+          {grade ? (
+            <GradeBadge grade={grade} />
+          ) : (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-sm font-semibold text-white ring-1 ring-inset ring-white/25 backdrop-blur">
+              {plan === "premium" ? (
+                <>
+                  <Sparkles className="h-4 w-4" /> Premium
+                </>
+              ) : (
+                "Plan gratuit"
+              )}
+            </span>
+          )}
+        </div>
+
+        <div className="relative mt-6 flex flex-wrap gap-3">
+          <Button
+            asChild
+            className="bg-white text-emerald-700 shadow-sm hover:bg-emerald-50"
+          >
+            <a href="#nouvelle">
+              <Rocket className="h-4 w-4" /> Nouvelle roadmap
+            </a>
+          </Button>
+          {grade && (
+            <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1.5 text-sm text-emerald-50 ring-1 ring-inset ring-white/20">
+              Accès {GRADE_LABEL[grade]} — illimité
+            </span>
+          )}
+        </div>
+      </section>
+
+      {/* ── Statistiques ─────────────────────────────────────────────────── */}
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Roadmaps" value={roadmaps.length} Icon={FolderKanban} accent="emerald" index={0} />
+        <StatCard label="Étapes planifiées" value={totalItems} Icon={ListChecks} accent="sky" index={1} />
+        <StatCard label="Tableaux" value={boards} Icon={Map} accent="teal" index={2} />
+        <StatCard label="Espaces créatifs" value={creative} Icon={Sparkles} accent="violet" index={3} />
+      </section>
+
+      {atLimit && (
+        <div className="rb-reveal flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
           <span>
             Limite du plan gratuit atteinte ({FREE_LIMITS.maxRoadmaps} roadmap).
           </span>
@@ -66,48 +136,50 @@ export default async function DashboardPage({
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+      {/* ── Roadmaps + formulaire ────────────────────────────────────────── */}
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold tracking-tight">Mes roadmaps</h2>
+            <span className="text-sm text-zinc-400">
+              {roadmaps.length} au total
+            </span>
+          </div>
+
           {roadmaps.length === 0 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Aucune roadmap pour l&apos;instant</CardTitle>
-                <CardDescription>
-                  Créez votre première roadmap avec le formulaire ci-contre.
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            <div className="rb-pop flex flex-col items-center justify-center rounded-2xl border border-dashed border-emerald-200 bg-white/60 px-6 py-16 text-center dark:border-emerald-950/60 dark:bg-zinc-950/40">
+              <span className="rb-float inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-300">
+                <FolderKanban className="h-8 w-8" />
+              </span>
+              <h3 className="mt-4 text-lg font-semibold">
+                Aucune roadmap pour l&apos;instant
+              </h3>
+              <p className="mt-1 max-w-xs text-sm text-zinc-500">
+                Lancez-vous&nbsp;: créez votre première roadmap avec le
+                formulaire ci-contre.
+              </p>
+              <ArrowRight className="mt-4 hidden h-5 w-5 animate-pulse text-emerald-500 lg:block" />
+            </div>
           ) : (
-            roadmaps.map((roadmap) => (
-              <Card key={roadmap.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-2">
-                    <Link href={`/dashboard/${roadmap.id}`} className="min-w-0">
-                      <CardTitle className="hover:underline">
-                        {roadmap.title}{" "}
-                        <span className="font-normal text-zinc-400">
-                          (
-                          {roadmap.type === "test"
-                            ? "Canvas"
-                            : roadmap.type === "test2"
-                              ? "Feuille de calcul"
-                              : "Tableau"}
-                          )
-                        </span>
-                      </CardTitle>
-                      <CardDescription className="mt-1.5">
-                        {roadmap.description || "Sans description"} ·{" "}
-                        {roadmap._count.items} étape(s)
-                      </CardDescription>
-                    </Link>
-                    <DeleteRoadmapButton roadmapId={roadmap.id} />
-                  </div>
-                </CardHeader>
-              </Card>
-            ))
+            <div className="grid gap-4 sm:grid-cols-2">
+              {roadmaps.map((roadmap, i) => (
+                <RoadmapCard
+                  key={roadmap.id}
+                  id={roadmap.id}
+                  title={roadmap.title}
+                  description={roadmap.description}
+                  type={roadmap.type}
+                  itemCount={roadmap._count.items}
+                  index={i}
+                />
+              ))}
+            </div>
           )}
         </div>
-        <RoadmapForm />
+
+        <div id="nouvelle" className="lg:sticky lg:top-24 lg:self-start">
+          <RoadmapForm />
+        </div>
       </div>
     </div>
   );

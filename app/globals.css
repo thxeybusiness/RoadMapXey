@@ -11,3 +11,128 @@ body {
     Arial,
     sans-serif;
 }
+
+/* ── Motion design ──────────────────────────────────────────────────────────
+   Animations 100% CSS : entrées échelonnées, flottement, dégradé animé.
+   Toutes désactivées si l'utilisateur préfère moins de mouvement. */
+
+@keyframes rb-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rb-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  60% {
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes rb-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(4deg);
+  }
+}
+
+@keyframes rb-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes rb-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes rb-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgba(16, 185, 129, 0);
+  }
+}
+
+.rb-reveal {
+  opacity: 0;
+  animation: rb-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.rb-pop {
+  opacity: 0;
+  animation: rb-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.rb-float {
+  animation: rb-float 6s ease-in-out infinite;
+}
+
+.rb-gradient {
+  background-size: 200% 200%;
+  animation: rb-gradient 8s ease infinite;
+}
+
+.rb-ping {
+  animation: rb-ring 1.8s ease-out infinite;
+}
+
+/* Effet de brillance qui balaye au survol (élément ::after positionné). */
+.rb-sheen {
+  position: relative;
+  overflow: hidden;
+}
+.rb-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 70%
+  );
+}
+.rb-sheen:hover::after {
+  animation: rb-shimmer 0.9s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rb-reveal,
+  .rb-pop,
+  .rb-float,
+  .rb-gradient,
+  .rb-ping {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .rb-sheen:hover::after {
+    animation: none;
+  }
+}
