@@ -114,7 +114,10 @@ export async function createItemAction(formData: FormData): Promise<ActionResult
     title: formData.get("title"),
     description: formData.get("description") || undefined,
     status: formData.get("status") ?? "PLANNED",
-    quarter: formData.get("quarter") || "",
+    track: formData.get("track") || "",
+    startMonth: formData.get("startMonth") || "",
+    endMonth: formData.get("endMonth") || "",
+    color: formData.get("color") ?? "violet",
   });
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message };

@@ -74,7 +74,10 @@ export async function createRoadmapItem(
       title: input.title,
       description: input.description || null,
       status: input.status,
-      quarter: input.quarter || null,
+      track: input.track || null,
+      startMonth: input.startMonth || null,
+      endMonth: input.endMonth || input.startMonth || null,
+      color: input.color,
       position: roadmap._count.items,
     },
   });

@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { requireUser } from "@/lib/session";
 import { getRoadmap } from "@/server/roadmaps";
+import { RoadmapBoard } from "@/components/roadmap-board";
 import { ItemForm } from "@/components/item-form";
-import { ItemRow } from "@/components/item-row";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Roadmap" };
@@ -22,29 +22,48 @@ export default async function RoadmapPage({
   const roadmap = await getRoadmap(roadmapId, tenantId);
   if (!roadmap) notFound();
 
+  // Suggestions de couloirs existants pour le champ "track" du formulaire.
+  const existingTracks = [
+    ...new Set(roadmap.items.map((i) => i.track).filter(Boolean) as string[]),
+  ];
+
   return (
-    <div className="mx-auto max-w-4xl space-y-8 px-4 py-12">
-      <div>
-        <Button asChild variant="ghost" size="sm">
-          <Link href="/dashboard">
-            <ArrowLeft className="h-4 w-4" /> Retour
-          </Link>
-        </Button>
-        <h1 className="mt-4 text-3xl font-bold">{roadmap.title}</h1>
-        {roadmap.description && (
-          <p className="mt-2 text-zinc-500">{roadmap.description}</p>
-        )}
+    <div className="mx-auto max-w-7xl space-y-8 px-4 py-10">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">
+            <Link href="/dashboard">
+              <ArrowLeft className="h-4 w-4" /> Mes roadmaps
+            </Link>
+          </Button>
+          <h1 className="text-3xl font-bold">{roadmap.title}</h1>
+          {roadmap.description && (
+            <p className="mt-1 text-zinc-500">{roadmap.description}</p>
+          )}
+        </div>
+        <div className="flex items-center gap-4 text-xs text-zinc-400">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-zinc-400" />
+            Prévu
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-amber-500 bg-amber-200" />
+            En cours
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
+            Terminé
+          </span>
+        </div>
       </div>
 
-      <div className="space-y-3">
-        {roadmap.items.length === 0 ? (
-          <p className="text-sm text-zinc-500">
-            Aucun item — ajoutez le premier ci-dessous.
-          </p>
-        ) : (
-          roadmap.items.map((item) => <ItemRow key={item.id} item={item} />)
-        )}
-      </div>
+      <RoadmapBoard items={roadmap.items} />
+
+      <datalist id="tracks">
+        {existingTracks.map((t) => (
+          <option key={t} value={t} />
+        ))}
+      </datalist>
 
       <ItemForm roadmapId={roadmap.id} />
     </div>

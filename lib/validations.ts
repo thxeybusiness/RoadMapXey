@@ -21,17 +21,35 @@ export const roadmapSchema = z.object({
   description: z.string().max(2000).optional(),
 });
 
-export const roadmapItemSchema = z.object({
-  roadmapId: z.string().cuid(),
-  title: z.string().min(1, "Le titre est requis").max(200),
-  description: z.string().max(2000).optional(),
-  status: z.enum(["PLANNED", "IN_PROGRESS", "DONE"]).default("PLANNED"),
-  quarter: z
-    .string()
-    .regex(/^Q[1-4] \d{4}$/, 'Format attendu : "Q3 2026"')
-    .optional()
-    .or(z.literal("")),
-});
+export const ITEM_COLORS = [
+  "violet",
+  "blue",
+  "emerald",
+  "amber",
+  "rose",
+  "cyan",
+] as const;
+
+const monthString = z
+  .string()
+  .regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Format attendu : "2026-07"');
+
+export const roadmapItemSchema = z
+  .object({
+    roadmapId: z.string().cuid(),
+    title: z.string().min(1, "Le titre est requis").max(200),
+    description: z.string().max(2000).optional(),
+    status: z.enum(["PLANNED", "IN_PROGRESS", "DONE"]).default("PLANNED"),
+    track: z.string().max(60).optional().or(z.literal("")),
+    startMonth: monthString.optional().or(z.literal("")),
+    endMonth: monthString.optional().or(z.literal("")),
+    color: z.enum(ITEM_COLORS).default("violet"),
+  })
+  .refine(
+    (data) =>
+      !data.startMonth || !data.endMonth || data.endMonth >= data.startMonth,
+    { message: "Le mois de fin doit être après le mois de début" }
+  );
 
 export const checkoutSchema = z.object({
   priceId: z.string().startsWith("price_"),
