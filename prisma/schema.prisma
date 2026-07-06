@@ -67,6 +67,7 @@ model Roadmap {
   dayBlocks   DayBlock[]
   testNodes   TestNode[]
   testEdges   TestEdge[]
+  sheetCells  SheetCell[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
@@ -117,6 +118,21 @@ model TestEdge {
   targetId  String
   createdAt DateTime @default(now())
 
+  @@index([roadmapId])
+}
+
+// Feuille de calcul (type test2) : une ligne par cellule non vide.
+// value = saisie brute (texte, nombre ou formule "=SOMME(A1:A5)").
+model SheetCell {
+  id        String   @id @default(cuid())
+  roadmapId String
+  roadmap   Roadmap  @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  ref       String // "A1", "B12"…
+  value     String   @default("")
+  style     Json? // { bold, italic, underline, align, bg }
+  updatedAt DateTime @updatedAt
+
+  @@unique([roadmapId, ref])
   @@index([roadmapId])
 }
 

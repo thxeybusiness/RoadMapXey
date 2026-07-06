@@ -6,7 +6,9 @@ import { requireUser } from "@/lib/session";
 import { getRoadmap } from "@/server/roadmaps";
 import { RoadmapBoard } from "@/components/roadmap-board";
 import { NodeBoard } from "@/components/node-board";
+import { SheetBoard } from "@/components/sheet-board";
 import { ItemForm } from "@/components/item-form";
+import type { CellStyle } from "@/lib/sheet";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Roadmap" };
@@ -56,10 +58,14 @@ export default async function RoadmapPage({
       </div>
 
       {roadmap.type === "test2" ? (
-        <div className="flex min-h-[40vh] flex-col items-center justify-center gap-2">
-          <p className="text-4xl font-bold">Test 2</p>
-          <p className="text-zinc-500">Ce type de roadmap reste à construire.</p>
-        </div>
+        <SheetBoard
+          roadmapId={roadmap.id}
+          initialCells={roadmap.sheetCells.map((c) => ({
+            ref: c.ref,
+            value: c.value,
+            style: (c.style as CellStyle | null) ?? null,
+          }))}
+        />
       ) : roadmap.type === "test" ? (
         <NodeBoard
           roadmapId={roadmap.id}
