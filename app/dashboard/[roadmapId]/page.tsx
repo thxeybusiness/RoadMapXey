@@ -22,11 +22,6 @@ export default async function RoadmapPage({
   const roadmap = await getRoadmap(roadmapId, tenantId);
   if (!roadmap) notFound();
 
-  // Suggestions de couloirs existants pour le champ "track" du formulaire.
-  const existingTracks = [
-    ...new Set(roadmap.items.map((i) => i.track).filter(Boolean) as string[]),
-  ];
-
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 py-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -58,12 +53,6 @@ export default async function RoadmapPage({
       </div>
 
       <RoadmapBoard items={roadmap.items} />
-
-      <datalist id="tracks">
-        {existingTracks.map((t) => (
-          <option key={t} value={t} />
-        ))}
-      </datalist>
 
       <ItemForm roadmapId={roadmap.id} />
     </div>

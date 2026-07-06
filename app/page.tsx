@@ -8,7 +8,7 @@ const features = [
     icon: Map,
     title: "Roadmaps claires",
     description:
-      "Une timeline par mois, des couloirs par thème, des barres colorées. Sans usine à gaz.",
+      "Une timeline claire, du jour à l'année, avec des barres colorées. Sans usine à gaz.",
   },
   {
     icon: Zap,

@@ -41,7 +41,7 @@ export default function PricingPage() {
             {[
               `${FREE_LIMITS.maxRoadmaps} roadmap`,
               `${FREE_LIMITS.maxItemsPerRoadmap} étapes par roadmap`,
-              "Timeline par mois et couloirs",
+              "Timeline jour / semaine / mois / année",
             ].map((line) => (
               <p key={line} className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-emerald-600" /> {line}

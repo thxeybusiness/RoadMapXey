@@ -16,19 +16,55 @@ const COLORS = [
   { value: "cyan", swatch: "bg-cyan-400" },
 ];
 
+// Saisie clavier assistée : n'accepte que les chiffres et insère les « / ».
+function formatDateInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 8);
+  const parts = [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 8)];
+  return parts.filter(Boolean).join("/");
+}
+
+// "JJ/MM/AAAA" → "AAAA-MM-JJ" (ISO). Renvoie null si vide, undefined si invalide.
+function toISO(value: string): string | null | undefined {
+  const v = value.trim();
+  if (!v) return null;
+  const m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return undefined;
+  const [, dd, mm, yyyy] = m;
+  const day = Number(dd);
+  const month = Number(mm);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return undefined;
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 // Barre d'ajout minimaliste : tout tient sur une ligne.
 export function ItemForm({ roadmapId }: { roadmapId: string }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [color, setColor] = useState("violet");
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
   const [pending, startTransition] = useTransition();
 
   function onSubmit(formData: FormData) {
     setError(null);
+
+    const startISO = toISO(start);
+    const endISO = toISO(end);
+    if (startISO === undefined || endISO === undefined) {
+      setError("Date invalide — format attendu JJ/MM/AAAA");
+      return;
+    }
+    formData.set("startDate", startISO ?? "");
+    formData.set("endDate", endISO ?? "");
+
     startTransition(async () => {
       const result = await createItemAction(formData);
       if (!result.ok) setError(result.error);
-      else formRef.current?.reset();
+      else {
+        formRef.current?.reset();
+        setStart("");
+        setEnd("");
+      }
     });
   }
 
@@ -48,28 +84,29 @@ export function ItemForm({ roadmapId }: { roadmapId: string }) {
         className="h-9 min-w-40 flex-1"
       />
       <Input
-        name="track"
-        placeholder="Couloir"
-        aria-label="Couloir"
-        list="tracks"
-        className="h-9 w-32"
-      />
-      <Input
-        name="startDate"
-        type="date"
+        name="startText"
+        inputMode="numeric"
+        autoComplete="off"
+        placeholder="JJ/MM/AAAA"
         aria-label="Date de début"
         title="Date de début"
-        className="h-9 w-40 text-zinc-500"
+        value={start}
+        onChange={(e) => setStart(formatDateInput(e.target.value))}
+        className="h-9 w-36"
       />
       <span aria-hidden className="text-zinc-300 dark:text-zinc-600">
         →
       </span>
       <Input
-        name="endDate"
-        type="date"
+        name="endText"
+        inputMode="numeric"
+        autoComplete="off"
+        placeholder="JJ/MM/AAAA"
         aria-label="Date de fin"
         title="Date de fin"
-        className="h-9 w-40 text-zinc-500"
+        value={end}
+        onChange={(e) => setEnd(formatDateInput(e.target.value))}
+        className="h-9 w-36"
       />
       <div className="flex items-center gap-1.5 px-1">
         {COLORS.map((c) => (
