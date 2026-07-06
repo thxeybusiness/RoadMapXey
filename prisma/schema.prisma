@@ -65,6 +65,8 @@ model Roadmap {
   createdBy   User          @relation(fields: [createdById], references: [id], onDelete: Cascade)
   items       RoadmapItem[]
   dayBlocks   DayBlock[]
+  testNodes   TestNode[]
+  testEdges   TestEdge[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
@@ -87,6 +89,33 @@ model RoadmapItem {
   position    Int        @default(0)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+
+  @@index([roadmapId])
+}
+
+// Roadmap « canvas » (type test) : blocs reliables contenant des objectifs
+// cochables. Un bloc dont tous les objectifs sont cochés passe en vert.
+model TestNode {
+  id         String   @id @default(cuid())
+  roadmapId  String
+  roadmap    Roadmap  @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  title      String   @default("Nouveau bloc")
+  x          Int      @default(40)
+  y          Int      @default(40)
+  color      String   @default("violet")
+  objectives Json     @default("[]") // [{ id, label, done }]
+  createdAt  DateTime @default(now())
+
+  @@index([roadmapId])
+}
+
+model TestEdge {
+  id        String   @id @default(cuid())
+  roadmapId String
+  roadmap   Roadmap  @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  sourceId  String
+  targetId  String
+  createdAt DateTime @default(now())
 
   @@index([roadmapId])
 }
