@@ -28,10 +28,23 @@ export async function renameTeam(tenantId: string, name: string) {
   await prisma.tenant.update({ where: { id: tenantId }, data: { name: trimmed } });
 }
 
+// Résout la cible d'invitation : email direct, ou @pseudo → email du compte.
+async function resolveInviteEmail(input: string): Promise<string> {
+  const value = input.trim().replace(/^@/, "");
+  if (value.includes("@")) return value.toLowerCase();
+
+  const user = await prisma.user.findUnique({
+    where: { username: value.toLowerCase() },
+    select: { email: true },
+  });
+  if (!user) throw new Error("Aucun utilisateur avec ce nom d'utilisateur");
+  return user.email;
+}
+
 export async function inviteMember(
   userId: string,
   tenantId: string,
-  email: string
+  target: string
 ) {
   // L'invitation d'équipe est une fonctionnalité des forfaits payants.
   if (!(await isPremium(userId))) {
@@ -40,7 +53,7 @@ export async function inviteMember(
     );
   }
 
-  const normalized = email.trim().toLowerCase();
+  const normalized = await resolveInviteEmail(target);
 
   // Déjà membre de l'équipe ?
   const existingMember = await prisma.user.findFirst({
@@ -142,5 +155,27 @@ export async function getInvitationByToken(token: string) {
   return prisma.invitation.findUnique({
     where: { token },
     include: { tenant: { select: { name: true } } },
+  });
+}
+
+// Invitations reçues par l'utilisateur (adressées à son email), en attente,
+// et pointant vers un autre espace que le sien. Permet d'accepter/refuser
+// directement depuis le site, sans email.
+export async function getReceivedInvitations(email: string, currentTenantId: string) {
+  return prisma.invitation.findMany({
+    where: {
+      email: email.toLowerCase(),
+      acceptedAt: null,
+      NOT: { tenantId: currentTenantId },
+    },
+    orderBy: { createdAt: "desc" },
+    include: { tenant: { select: { name: true } } },
+  });
+}
+
+// Refuser une invitation reçue : on la supprime (sécurisé par l'email).
+export async function declineInvitation(invitationId: string, email: string) {
+  await prisma.invitation.deleteMany({
+    where: { id: invitationId, email: email.toLowerCase() },
   });
 }

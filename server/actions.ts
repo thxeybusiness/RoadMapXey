@@ -30,12 +30,14 @@ import {
 } from "@/server/testboard";
 import { updateSheetData } from "@/server/sheet";
 import {
+  declineInvitation,
   inviteMember,
   joinTeam,
   leaveTeam,
   renameTeam,
   revokeInvitation,
 } from "@/server/team";
+import { setUsername } from "@/server/account";
 import type { ActionResult } from "@/types";
 
 // Server Actions : la seule porte d'entrée des mutations depuis l'UI.
@@ -330,12 +332,40 @@ export async function renameTeamAction(formData: FormData): Promise<ActionResult
 
 export async function inviteMemberAction(formData: FormData): Promise<ActionResult> {
   const { userId, tenantId } = await requireUser();
-  const email = String(formData.get("email") ?? "");
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) {
-    return { ok: false, error: "Email invalide" };
+  // On accepte un email OU un nom d'utilisateur (@pseudo) : la résolution
+  // se fait côté serveur (server/team.ts → resolveInviteEmail).
+  const target = String(formData.get("target") ?? "").trim();
+  if (!target) {
+    return { ok: false, error: "Indiquez un email ou un nom d'utilisateur" };
   }
   try {
-    await inviteMember(userId, tenantId, email);
+    await inviteMember(userId, tenantId, target);
+    revalidatePath("/settings");
+    return { ok: true };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+// Choisir / changer son nom d'utilisateur depuis les paramètres.
+export async function setUsernameAction(formData: FormData): Promise<ActionResult> {
+  const { userId } = await requireUser();
+  try {
+    await setUsername(userId, String(formData.get("username") ?? ""));
+    revalidatePath("/settings");
+    return { ok: true };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+// Refuser une invitation reçue (adressée à mon email).
+export async function declineInvitationAction(
+  invitationId: string
+): Promise<ActionResult> {
+  const { email } = await requireUser();
+  try {
+    await declineInvitation(invitationId, email);
     revalidatePath("/settings");
     return { ok: true };
   } catch (error) {

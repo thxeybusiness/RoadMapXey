@@ -1,4 +1,4 @@
 {
   "framework": "nextjs",
-  "buildCommand": "prisma generate && (prisma db push --skip-generate --accept-data-loss || echo 'db push ignoré (DATABASE_URL absente ?)') && next build"
+  "buildCommand": "prisma generate && (prisma db push --skip-generate --accept-data-loss || echo 'db push ignoré (DATABASE_URL absente ?)') && (node scripts/backfill-usernames.mjs || echo 'backfill ignoré') && next build"
 }
