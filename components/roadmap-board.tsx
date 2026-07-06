@@ -1,21 +1,21 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import type { RoadmapItem } from "@prisma/client";
 import {
-  buildMonths,
-  currentMonth,
+  buildBuckets,
   groupByTrack,
-  monthLabel,
+  placeItem,
+  SCALE_COL_WIDTH,
+  SCALES,
   UNPLANNED,
+  type Scale,
 } from "@/lib/board";
 import { ItemBar } from "@/components/item-bar";
 import { cn } from "@/lib/utils";
 
-// Timeline façon Whimsical : colonnes = mois, couloirs = tracks,
-// barres colorées qui s'étendent du mois de début au mois de fin.
-
 const LABEL_WIDTH = 190;
-const MONTH_MIN_WIDTH = 120;
 
-// Accent de couleur par couloir (pastille + filet à gauche).
 const TRACK_ACCENTS = [
   "bg-violet-500",
   "bg-blue-500",
@@ -27,71 +27,91 @@ const TRACK_ACCENTS = [
   "bg-lime-500",
 ];
 
-function gridTemplate(monthCount: number) {
-  return {
-    gridTemplateColumns: `${LABEL_WIDTH}px repeat(${monthCount}, minmax(${MONTH_MIN_WIDTH}px, 1fr))`,
-  };
-}
-
-function computePlacement(item: RoadmapItem, months: string[]) {
-  const start = item.startMonth ?? months[0];
-  let startIdx = months.indexOf(start);
-  if (startIdx === -1) startIdx = 0;
-  const end = item.endMonth ?? start;
-  let endIdx = months.indexOf(end);
-  if (endIdx === -1) endIdx = end > months[months.length - 1] ? months.length - 1 : startIdx;
-  if (endIdx < startIdx) endIdx = startIdx;
-  return { colStart: startIdx + 2, colEnd: endIdx + 3 };
-}
-
 export function RoadmapBoard({ items }: { items: RoadmapItem[] }) {
-  const months = buildMonths(items);
-  const groups = groupByTrack(items);
-  const today = currentMonth();
-  const todayIdx = months.indexOf(today);
+  const [scale, setScale] = useState<Scale>("month");
+
+  const buckets = useMemo(() => buildBuckets(items, scale), [items, scale]);
+  const groups = useMemo(() => groupByTrack(items), [items]);
+  const colWidth = SCALE_COL_WIDTH[scale];
 
   const tracks = [...groups.keys()].filter((t) => t !== UNPLANNED).sort();
   const unplanned = groups.get(UNPLANNED) ?? [];
+  const todayIdx = buckets.findIndex((b) => b.isNow);
+
+  const gridTemplate = {
+    gridTemplateColumns: `${LABEL_WIDTH}px repeat(${buckets.length}, minmax(${colWidth}px, 1fr))`,
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Sélecteur d'échelle */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="inline-flex rounded-lg border border-zinc-200 bg-zinc-100 p-0.5 dark:border-zinc-800 dark:bg-zinc-900">
+          {SCALES.map((s) => (
+            <button
+              key={s.value}
+              type="button"
+              onClick={() => setScale(s.value)}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                scale === s.value
+                  ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-950 dark:text-zinc-50"
+                  : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+              )}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+        <p className="hidden text-xs text-zinc-400 sm:block">
+          Cliquez sur la pastille de statut d&apos;une étape pour la faire
+          avancer, ou survolez-la pour la supprimer.
+        </p>
+      </div>
+
       <div className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
         <div
           className="relative"
-          style={{ minWidth: LABEL_WIDTH + months.length * MONTH_MIN_WIDTH }}
+          style={{ minWidth: LABEL_WIDTH + buckets.length * colWidth }}
         >
-          {/* Ligne verticale « aujourd'hui » traversant tout le tableau */}
+          {/* Ligne verticale « aujourd'hui » */}
           {todayIdx >= 0 && (
             <div
               aria-hidden
-              className="pointer-events-none absolute bottom-0 top-11 z-20 w-px bg-violet-400/70 dark:bg-violet-500/60"
+              className="pointer-events-none absolute bottom-0 top-12 z-20 w-px bg-violet-400/70 dark:bg-violet-500/60"
               style={{
-                left: `calc(${LABEL_WIDTH}px + (100% - ${LABEL_WIDTH}px) * ${todayIdx} / ${months.length})`,
+                left: `calc(${LABEL_WIDTH}px + (100% - ${LABEL_WIDTH}px) * ${todayIdx} / ${buckets.length})`,
               }}
             >
               <span className="absolute -left-1.5 -top-1.5 h-3 w-3 rounded-full bg-violet-500 ring-2 ring-white dark:ring-zinc-950" />
             </div>
           )}
 
-          {/* En-tête : mois */}
+          {/* En-tête : colonnes de temps */}
           <div
             className="grid border-b border-zinc-200 dark:border-zinc-800"
-            style={gridTemplate(months.length)}
+            style={gridTemplate}
           >
             <div className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-400">
               Couloir
             </div>
-            {months.map((m, i) => (
+            {buckets.map((b) => (
               <div
-                key={m}
+                key={b.key}
                 className={cn(
-                  "border-l border-zinc-100 px-3 py-3 text-center text-sm font-medium dark:border-zinc-800/60",
-                  m === today
+                  "border-l border-zinc-100 px-1 py-2 text-center dark:border-zinc-800/60",
+                  b.isWeekend && "bg-zinc-50 dark:bg-zinc-900/40",
+                  b.isNow
                     ? "font-semibold text-violet-600 dark:text-violet-300"
                     : "text-zinc-500"
                 )}
               >
-                {monthLabel(m, i === 0 || m.endsWith("-01"))}
+                {b.subLabel && (
+                  <div className="text-[10px] uppercase tracking-wide text-zinc-400">
+                    {b.subLabel}
+                  </div>
+                )}
+                <div className="text-sm font-medium leading-tight">{b.label}</div>
               </div>
             ))}
           </div>
@@ -110,21 +130,19 @@ export function RoadmapBoard({ items }: { items: RoadmapItem[] }) {
                 <div
                   key={track}
                   className="grid items-center gap-y-2 border-b border-zinc-100 py-3 last:border-b-0 odd:bg-zinc-50/40 dark:border-zinc-800/60 dark:odd:bg-zinc-900/30"
-                  style={gridTemplate(months.length)}
+                  style={gridTemplate}
                 >
-                  {/* Guides verticaux des mois */}
-                  {months.map((m, i) => (
+                  {buckets.map((b, i) => (
                     <div
-                      key={`guide-${m}`}
+                      key={`guide-${b.key}`}
                       aria-hidden
-                      className="pointer-events-none h-full border-l border-zinc-100 dark:border-zinc-800/60"
-                      style={{
-                        gridColumn: i + 2,
-                        gridRow: `1 / span ${trackItems.length}`,
-                      }}
+                      className={cn(
+                        "pointer-events-none h-full border-l border-zinc-100 dark:border-zinc-800/60",
+                        b.isWeekend && "bg-zinc-50/70 dark:bg-zinc-900/30"
+                      )}
+                      style={{ gridColumn: i + 2, gridRow: `1 / span ${trackItems.length}` }}
                     />
                   ))}
-                  {/* Label du couloir avec accent coloré */}
                   <div
                     className="flex items-center gap-2.5 px-5"
                     style={{ gridColumn: 1, gridRow: `1 / span ${trackItems.length}` }}
@@ -132,14 +150,17 @@ export function RoadmapBoard({ items }: { items: RoadmapItem[] }) {
                     <span className={cn("h-6 w-1.5 shrink-0 rounded-full", accent)} />
                     <span className="text-sm font-semibold">{track}</span>
                   </div>
-                  {/* Barres */}
                   {trackItems.map((item, row) => {
-                    const { colStart, colEnd } = computePlacement(item, months);
+                    const placement = placeItem(item, buckets);
+                    if (!placement) return null;
                     return (
                       <div
                         key={item.id}
                         className="px-1"
-                        style={{ gridColumn: `${colStart} / ${colEnd}`, gridRow: row + 1 }}
+                        style={{
+                          gridColumn: `${placement.startIdx + 2} / ${placement.endIdx + 3}`,
+                          gridRow: row + 1,
+                        }}
                       >
                         <ItemBar item={item} />
                       </div>

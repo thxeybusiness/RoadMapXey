@@ -68,6 +68,11 @@ export async function createRoadmapItem(
     );
   }
 
+  const start = input.startDate ? new Date(`${input.startDate}T00:00:00`) : null;
+  const end = input.endDate
+    ? new Date(`${input.endDate}T00:00:00`)
+    : start;
+
   return prisma.roadmapItem.create({
     data: {
       roadmapId: roadmap.id,
@@ -75,8 +80,8 @@ export async function createRoadmapItem(
       description: input.description || null,
       status: input.status,
       track: input.track || null,
-      startMonth: input.startMonth || null,
-      endMonth: input.endMonth || input.startMonth || null,
+      startDate: start,
+      endDate: end,
       color: input.color,
       position: roadmap._count.items,
     },
