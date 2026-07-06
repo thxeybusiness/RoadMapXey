@@ -2,10 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { CreditCard, LayoutDashboard, LogOut, Settings } from "lucide-react";
+import { Crown, CreditCard, LayoutDashboard, LogOut, Settings, Star } from "lucide-react";
 import { logoutAction } from "@/server/actions";
 import { GradeBadge } from "@/components/grade-badge";
 import type { Grade } from "@/lib/grades";
+
+// Symbole du grade affiché en pastille sur l'avatar.
+const GRADE_MARK: Record<Grade, { Icon: typeof Crown; className: string }> = {
+  founder: { Icon: Crown, className: "bg-gradient-to-br from-emerald-400 to-emerald-600" },
+  vip: { Icon: Star, className: "bg-gradient-to-br from-yellow-400 to-amber-500" },
+};
 
 // Rond avec l'initiale du prénom → menu déroulant (tableau de bord,
 // abonnement, paramètres, déconnexion).
@@ -52,6 +58,20 @@ export function UserMenu({
       >
         {initial}
       </button>
+
+      {/* Symbole du grade en bas à droite de l'avatar */}
+      {grade &&
+        (() => {
+          const { Icon, className } = GRADE_MARK[grade];
+          return (
+            <span
+              aria-hidden
+              className={`pointer-events-none absolute -bottom-0.5 -right-0.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-[#dceee2] shadow-sm dark:border-[#0a1210] ${className}`}
+            >
+              <Icon className="h-2.5 w-2.5 text-white" />
+            </span>
+          );
+        })()}
 
       {open && (
         <div
