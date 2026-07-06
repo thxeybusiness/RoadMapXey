@@ -9,10 +9,10 @@ export async function Navbar() {
   const session = await auth();
 
   return (
-    <header className="border-b border-zinc-200 dark:border-zinc-800">
+    <header className="sticky top-0 z-40 border-b border-emerald-100 bg-emerald-50/80 backdrop-blur dark:border-emerald-950/60 dark:bg-[#081210]/80">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-bold">
-          <Map className="h-5 w-5" />
+          <Map className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           RoadMap Business
         </Link>
         <div className="flex items-center gap-2">

@@ -36,7 +36,7 @@ export default function LandingPage() {
           de votre produit — sans tableur ni outil hors de prix.
         </p>
         <div className="mt-10 flex items-center justify-center gap-4">
-          <Button asChild size="lg">
+          <Button asChild variant="primary" size="lg">
             <Link href="/signup">Commencer gratuitement</Link>
           </Button>
           <Button asChild variant="outline" size="lg">
@@ -53,7 +53,9 @@ export default function LandingPage() {
         {features.map((feature) => (
           <Card key={feature.title}>
             <CardHeader>
-              <feature.icon className="h-8 w-8" />
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                <feature.icon className="h-6 w-6" />
+              </span>
               <CardTitle className="mt-2">{feature.title}</CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-zinc-500">
