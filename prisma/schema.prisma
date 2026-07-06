@@ -77,8 +77,10 @@ model RoadmapItem {
   description String?
   status      ItemStatus @default(PLANNED)
   track       String? // couloir / swimlane, ex : "Marketing"
-  startMonth  String? // "2026-07" — début de la barre sur la timeline
-  endMonth    String? // "2026-09" — fin de la barre (inclus)
+  startDate   DateTime? // début de la barre sur la timeline (précision jour)
+  endDate     DateTime? // fin de la barre (inclus)
+  startMonth  String? // legacy "2026-07" — conservé pour compat, lu en repli
+  endMonth    String? // legacy "2026-09"
   color       String     @default("violet") // violet | blue | emerald | amber | rose | cyan
   position    Int        @default(0)
   createdAt   DateTime   @default(now())

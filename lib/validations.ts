@@ -30,9 +30,9 @@ export const ITEM_COLORS = [
   "cyan",
 ] as const;
 
-const monthString = z
+const dateString = z
   .string()
-  .regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Format attendu : "2026-07"');
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide");
 
 export const roadmapItemSchema = z
   .object({
@@ -41,14 +41,13 @@ export const roadmapItemSchema = z
     description: z.string().max(2000).optional(),
     status: z.enum(["PLANNED", "IN_PROGRESS", "DONE"]).default("PLANNED"),
     track: z.string().max(60).optional().or(z.literal("")),
-    startMonth: monthString.optional().or(z.literal("")),
-    endMonth: monthString.optional().or(z.literal("")),
+    startDate: dateString.optional().or(z.literal("")),
+    endDate: dateString.optional().or(z.literal("")),
     color: z.enum(ITEM_COLORS).default("violet"),
   })
   .refine(
-    (data) =>
-      !data.startMonth || !data.endMonth || data.endMonth >= data.startMonth,
-    { message: "Le mois de fin doit être après le mois de début" }
+    (data) => !data.startDate || !data.endDate || data.endDate >= data.startDate,
+    { message: "La date de fin doit être après la date de début" }
   );
 
 export const checkoutSchema = z.object({

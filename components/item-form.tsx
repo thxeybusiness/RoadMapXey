@@ -55,21 +55,21 @@ export function ItemForm({ roadmapId }: { roadmapId: string }) {
         className="h-9 w-32"
       />
       <Input
-        name="startMonth"
-        type="month"
-        aria-label="Mois de début"
-        title="Mois de début"
-        className="h-9 w-36 text-zinc-500"
+        name="startDate"
+        type="date"
+        aria-label="Date de début"
+        title="Date de début"
+        className="h-9 w-40 text-zinc-500"
       />
       <span aria-hidden className="text-zinc-300 dark:text-zinc-600">
         →
       </span>
       <Input
-        name="endMonth"
-        type="month"
-        aria-label="Mois de fin"
-        title="Mois de fin"
-        className="h-9 w-36 text-zinc-500"
+        name="endDate"
+        type="date"
+        aria-label="Date de fin"
+        title="Date de fin"
+        className="h-9 w-40 text-zinc-500"
       />
       <div className="flex items-center gap-1.5 px-1">
         {COLORS.map((c) => (
