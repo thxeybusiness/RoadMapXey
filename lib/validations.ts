@@ -50,6 +50,26 @@ export const roadmapItemSchema = z
     { message: "La date de fin doit être après la date de début" }
   );
 
+const halfHour = z
+  .number()
+  .int()
+  .min(0)
+  .max(1440)
+  .refine((v) => v % 30 === 0, "Créneau de 30 min attendu");
+
+export const dayBlockSchema = z
+  .object({
+    roadmapId: z.string().cuid(),
+    day: dateString,
+    title: z.string().min(1, "Le titre est requis").max(200),
+    startMinutes: halfHour,
+    endMinutes: halfHour,
+    color: z.enum(ITEM_COLORS).default("violet"),
+  })
+  .refine((d) => d.endMinutes > d.startMinutes, {
+    message: "L'heure de fin doit être après l'heure de début",
+  });
+
 export const checkoutSchema = z.object({
   priceId: z.string().startsWith("price_"),
 });
@@ -58,3 +78,4 @@ export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RoadmapInput = z.infer<typeof roadmapSchema>;
 export type RoadmapItemInput = z.infer<typeof roadmapItemSchema>;
+export type DayBlockInput = z.infer<typeof dayBlockSchema>;

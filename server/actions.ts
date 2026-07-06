@@ -5,14 +5,17 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/session";
 import { signIn, signOut } from "@/lib/auth";
 import {
+  dayBlockSchema,
   roadmapItemSchema,
   roadmapSchema,
   signupSchema,
 } from "@/lib/validations";
 import { registerUser, deleteAccount } from "@/server/users";
 import {
+  createDayBlock,
   createRoadmap,
   createRoadmapItem,
+  deleteDayBlock,
   deleteRoadmap,
   deleteRoadmapItem,
   updateItemStatus,
@@ -153,6 +156,48 @@ export async function deleteItemAction(
   const { tenantId } = await requireUser();
   try {
     await deleteRoadmapItem(itemId, tenantId);
+    revalidatePath(`/dashboard/${roadmapId}`);
+    return { ok: true };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+// ── Planificateur intra-journalier ──────────────────────────────────────────
+
+export async function createDayBlockAction(
+  formData: FormData
+): Promise<ActionResult> {
+  const { tenantId } = await requireUser();
+
+  const parsed = dayBlockSchema.safeParse({
+    roadmapId: formData.get("roadmapId"),
+    day: formData.get("day"),
+    title: formData.get("title"),
+    startMinutes: Number(formData.get("startMinutes")),
+    endMinutes: Number(formData.get("endMinutes")),
+    color: formData.get("color") ?? "violet",
+  });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0].message };
+  }
+
+  try {
+    await createDayBlock(tenantId, parsed.data);
+    revalidatePath(`/dashboard/${parsed.data.roadmapId}`);
+    return { ok: true };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+export async function deleteDayBlockAction(
+  blockId: string,
+  roadmapId: string
+): Promise<ActionResult> {
+  const { tenantId } = await requireUser();
+  try {
+    await deleteDayBlock(blockId, tenantId);
     revalidatePath(`/dashboard/${roadmapId}`);
     return { ok: true };
   } catch (error) {

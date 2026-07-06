@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { RoadmapItem } from "@prisma/client";
+import type { DayBlock, RoadmapItem } from "@prisma/client";
+import { DayPlanner } from "@/components/day-planner";
 import {
   buildBuckets,
   dateCoord,
@@ -26,10 +27,23 @@ const MONTH_FULL = [
   "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
 ];
 
-export function RoadmapBoard({ items }: { items: RoadmapItem[] }) {
+function dayKeyOf(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+export function RoadmapBoard({
+  items,
+  roadmapId,
+  dayBlocks,
+}: {
+  items: RoadmapItem[];
+  roadmapId: string;
+  dayBlocks: DayBlock[];
+}) {
   // Démarre sur l'année courante et ses 12 mois.
   const [scale, setScale] = useState<Scale>("month");
   const [anchor, setAnchor] = useState<Date>(() => new Date());
+  const [plannerDate, setPlannerDate] = useState<Date | null>(null);
 
   const buckets = useMemo(() => buildBuckets(scale, anchor), [scale, anchor]);
   const colWidth = SCALE_COL_WIDTH[scale];
@@ -64,17 +78,20 @@ export function RoadmapBoard({ items }: { items: RoadmapItem[] }) {
   };
   const bodyHeight = Math.max(planned.length, 1) * ROW_HEIGHT;
 
-  // Drill-down : cliquer une année → ses mois ; un mois → ses jours.
-  function drillInto(bucketStart: Date) {
+  // Drill-down : cliquer un mois → ses jours ; cliquer un jour → planning
+  // horaire de la journée (fenêtre indépendante).
+  function onBucketClick(bucketStart: Date) {
     if (scale === "year") {
       setScale("month");
       setAnchor(new Date(bucketStart.getFullYear(), 0, 1));
     } else if (scale === "month") {
       setScale("day");
       setAnchor(bucketStart);
+    } else if (scale === "day") {
+      setPlannerDate(bucketStart);
     }
   }
-  const drillable = scale === "year" || scale === "month";
+  const clickable = scale === "year" || scale === "month" || scale === "day";
 
   function zoomOut() {
     if (scale === "day" || scale === "week") setScale("month");
@@ -164,12 +181,13 @@ export function RoadmapBoard({ items }: { items: RoadmapItem[] }) {
               <button
                 key={b.key}
                 type="button"
-                onClick={() => drillable && drillInto(b.start)}
-                disabled={!drillable}
+                onClick={() => clickable && onBucketClick(b.start)}
+                disabled={!clickable}
+                title={scale === "day" ? "Ouvrir le planning de la journée" : undefined}
                 className={cn(
                   "border-l border-zinc-200 px-1 py-2 text-center first:border-l-0 dark:border-zinc-800",
                   b.isWeekend && "bg-zinc-100/70 dark:bg-zinc-900/50",
-                  drillable && "cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-950/30",
+                  clickable && "cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-950/30",
                   b.isNow
                     ? "font-semibold text-violet-600 dark:text-violet-300"
                     : "text-zinc-500"
@@ -253,6 +271,17 @@ export function RoadmapBoard({ items }: { items: RoadmapItem[] }) {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Planning intra-journalier (fenêtre indépendante) */}
+      {plannerDate && (
+        <DayPlanner
+          date={plannerDate}
+          dayKey={dayKeyOf(plannerDate)}
+          roadmapId={roadmapId}
+          blocks={dayBlocks}
+          onClose={() => setPlannerDate(null)}
+        />
       )}
     </div>
   );

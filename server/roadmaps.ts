@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { FREE_LIMITS, isPremium } from "@/lib/subscription";
-import type { RoadmapInput, RoadmapItemInput } from "@/lib/validations";
+import type {
+  DayBlockInput,
+  RoadmapInput,
+  RoadmapItemInput,
+} from "@/lib/validations";
 
 // Fonctionnalité core : les roadmaps produit.
 // Chaque requête est scopée au tenantId — un utilisateur ne peut JAMAIS
@@ -17,7 +21,38 @@ export async function listRoadmaps(tenantId: string) {
 export async function getRoadmap(id: string, tenantId: string) {
   return prisma.roadmap.findFirst({
     where: { id, tenantId },
-    include: { items: { orderBy: [{ position: "asc" }, { createdAt: "asc" }] } },
+    include: {
+      items: { orderBy: [{ position: "asc" }, { createdAt: "asc" }] },
+      dayBlocks: { orderBy: [{ day: "asc" }, { startMinutes: "asc" }] },
+    },
+  });
+}
+
+// ── Planificateur intra-journalier (créneaux de 30 min) ──────────────────────
+
+export async function createDayBlock(tenantId: string, input: DayBlockInput) {
+  // Scopé au tenant via la roadmap : impossible d'écrire chez un autre tenant.
+  const roadmap = await prisma.roadmap.findFirst({
+    where: { id: input.roadmapId, tenantId },
+    select: { id: true },
+  });
+  if (!roadmap) throw new Error("Roadmap introuvable");
+
+  return prisma.dayBlock.create({
+    data: {
+      roadmapId: roadmap.id,
+      day: input.day,
+      title: input.title,
+      startMinutes: input.startMinutes,
+      endMinutes: input.endMinutes,
+      color: input.color,
+    },
+  });
+}
+
+export async function deleteDayBlock(blockId: string, tenantId: string) {
+  await prisma.dayBlock.deleteMany({
+    where: { id: blockId, roadmap: { tenantId } },
   });
 }
 
