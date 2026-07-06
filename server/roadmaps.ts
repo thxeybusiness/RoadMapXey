@@ -64,7 +64,7 @@ export async function createRoadmapItem(
 
   if (!(await isPremium(userId)) && roadmap._count.items >= FREE_LIMITS.maxItemsPerRoadmap) {
     throw new Error(
-      `Plan gratuit limité à ${FREE_LIMITS.maxItemsPerRoadmap} items par roadmap. Passez en Premium pour en ajouter plus.`
+      `Plan gratuit limité à ${FREE_LIMITS.maxItemsPerRoadmap} étapes par roadmap. Passez en Premium pour en ajouter plus.`
     );
   }
 

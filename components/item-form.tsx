@@ -1,11 +1,10 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { Plus } from "lucide-react";
 import { createItemAction } from "@/server/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 const COLORS = [
@@ -17,6 +16,7 @@ const COLORS = [
   { value: "cyan", swatch: "bg-cyan-400" },
 ];
 
+// Barre d'ajout minimaliste : tout tient sur une ligne.
 export function ItemForm({ roadmapId }: { roadmapId: string }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -33,68 +33,66 @@ export function ItemForm({ roadmapId }: { roadmapId: string }) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Ajouter un item à la timeline</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form ref={formRef} action={onSubmit} className="space-y-4">
-          <input type="hidden" name="roadmapId" value={roadmapId} />
-          <input type="hidden" name="color" value={color} />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="item-title">Titre</Label>
-              <Input id="item-title" name="title" placeholder="Lancer la beta" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="item-track">Couloir</Label>
-              <Input id="item-track" name="track" placeholder="Produit, Marketing…" list="tracks" />
-            </div>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="item-start">Mois de début</Label>
-              <Input id="item-start" name="startMonth" type="month" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="item-end">Mois de fin</Label>
-              <Input id="item-end" name="endMonth" type="month" />
-            </div>
-            <div className="space-y-2">
-              <Label>Couleur</Label>
-              <div className="flex h-10 items-center gap-2">
-                {COLORS.map((c) => (
-                  <button
-                    key={c.value}
-                    type="button"
-                    aria-label={`Couleur ${c.value}`}
-                    onClick={() => setColor(c.value)}
-                    className={cn(
-                      "h-6 w-6 rounded-full transition-transform",
-                      c.swatch,
-                      color === c.value
-                        ? "scale-125 ring-2 ring-zinc-900 ring-offset-2 dark:ring-zinc-100 dark:ring-offset-zinc-950"
-                        : "hover:scale-110"
-                    )}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="item-description">Description (optionnel)</Label>
-            <Input id="item-description" name="description" placeholder="Détails…" />
-          </div>
-          <p className="text-xs text-zinc-400">
-            Sans mois de début, l&apos;item ira dans « À planifier ». Sans mois
-            de fin, la barre dure un seul mois.
-          </p>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <Button type="submit" disabled={pending}>
-            {pending ? "Ajout…" : "Ajouter à la roadmap"}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+    <form
+      ref={formRef}
+      action={onSubmit}
+      className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-200 bg-white p-2 shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
+    >
+      <input type="hidden" name="roadmapId" value={roadmapId} />
+      <input type="hidden" name="color" value={color} />
+      <Input
+        name="title"
+        placeholder="Nouvelle étape…"
+        aria-label="Titre"
+        required
+        className="h-9 min-w-40 flex-1"
+      />
+      <Input
+        name="track"
+        placeholder="Couloir"
+        aria-label="Couloir"
+        list="tracks"
+        className="h-9 w-32"
+      />
+      <Input
+        name="startMonth"
+        type="month"
+        aria-label="Mois de début"
+        title="Mois de début"
+        className="h-9 w-36 text-zinc-500"
+      />
+      <span aria-hidden className="text-zinc-300 dark:text-zinc-600">
+        →
+      </span>
+      <Input
+        name="endMonth"
+        type="month"
+        aria-label="Mois de fin"
+        title="Mois de fin"
+        className="h-9 w-36 text-zinc-500"
+      />
+      <div className="flex items-center gap-1.5 px-1">
+        {COLORS.map((c) => (
+          <button
+            key={c.value}
+            type="button"
+            aria-label={`Couleur ${c.value}`}
+            onClick={() => setColor(c.value)}
+            className={cn(
+              "h-4 w-4 rounded-full transition-transform",
+              c.swatch,
+              color === c.value
+                ? "scale-125 ring-2 ring-zinc-900 ring-offset-1 dark:ring-zinc-100 dark:ring-offset-zinc-950"
+                : "hover:scale-110"
+            )}
+          />
+        ))}
+      </div>
+      <Button type="submit" size="sm" disabled={pending} className="h-9">
+        <Plus className="h-4 w-4" />
+        {pending ? "Ajout…" : "Ajouter"}
+      </Button>
+      {error && <p className="w-full px-1 text-sm text-red-600">{error}</p>}
+    </form>
   );
 }

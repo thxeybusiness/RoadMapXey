@@ -40,8 +40,8 @@ export default function PricingPage() {
           <CardContent className="space-y-2 text-sm">
             {[
               `${FREE_LIMITS.maxRoadmaps} roadmap`,
-              `${FREE_LIMITS.maxItemsPerRoadmap} items par roadmap`,
-              "Statuts et trimestres",
+              `${FREE_LIMITS.maxItemsPerRoadmap} étapes par roadmap`,
+              "Timeline par mois et couloirs",
             ].map((line) => (
               <p key={line} className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-emerald-600" /> {line}
@@ -69,7 +69,7 @@ export default function PricingPage() {
           <CardContent className="space-y-2 text-sm">
             {[
               "Roadmaps illimitées",
-              "Items illimités",
+              "Étapes illimitées",
               "Support prioritaire",
               "Annulable à tout moment",
             ].map((line) => (

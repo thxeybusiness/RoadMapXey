@@ -67,7 +67,7 @@ export function RoadmapBoard({ items }: { items: RoadmapItem[] }) {
           {/* Couloirs */}
           {tracks.length === 0 ? (
             <p className="px-4 py-10 text-center text-sm text-zinc-400">
-              Planifiez votre premier item avec le formulaire ci-dessous — il
+              Planifiez votre première étape avec le formulaire ci-dessous — elle
               apparaîtra ici sous forme de barre colorée.
             </p>
           ) : (

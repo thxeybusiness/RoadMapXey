@@ -88,7 +88,7 @@ export function ItemBar({
       <button
         type="button"
         disabled={pending}
-        aria-label="Supprimer l'item"
+        aria-label="Supprimer l'étape"
         className="shrink-0 rounded p-0.5 opacity-0 transition-opacity hover:bg-white/60 group-hover:opacity-100 dark:hover:bg-black/30"
         onClick={() =>
           startTransition(async () => {

@@ -81,7 +81,7 @@ export default async function DashboardPage({
                       </CardTitle>
                       <CardDescription className="mt-1.5">
                         {roadmap.description || "Sans description"} ·{" "}
-                        {roadmap._count.items} item(s)
+                        {roadmap._count.items} étape(s)
                       </CardDescription>
                     </Link>
                     <DeleteRoadmapButton roadmapId={roadmap.id} />
