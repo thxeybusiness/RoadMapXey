@@ -176,8 +176,8 @@ export function ExcelBoard({
   }, [roadmapId]);
 
   return (
-    // Pleine largeur : on casse la contrainte max-w du conteneur de page.
-    <div className="relative left-1/2 w-[100vw] -translate-x-1/2 space-y-2 px-4">
+    // Pleine largeur, retrait de 14vh à gauche et à droite.
+    <div className="relative left-1/2 w-[100vw] -translate-x-1/2 space-y-2 px-[14vh]">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3 text-xs text-zinc-400">
           <span>Légende des fonds :</span>
