@@ -72,7 +72,8 @@ export function DayPlanner({
     [blocks, dayKey]
   );
 
-  const hours = Array.from({ length: 24 }, (_, h) => h);
+  // 0..24 : la ligne 24 ferme la journée et s'affiche « 00:00 » après 23:00.
+  const hours = Array.from({ length: 25 }, (_, h) => h);
   const title = `${WEEKDAYS[date.getDay()]} ${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
 
   function onSubmit(formData: FormData) {
@@ -127,13 +128,15 @@ export function DayPlanner({
                 style={{ top: h * 2 * SLOT_PX, height: 2 * SLOT_PX }}
               >
                 <span className="w-12 shrink-0 text-xs text-zinc-400">
-                  {String(h).padStart(2, "0")}:00
+                  {h === 24 ? "00:00" : `${String(h).padStart(2, "0")}:00`}
                 </span>
                 <div className="flex-1 border-t border-zinc-200 dark:border-zinc-800">
-                  <div
-                    className="border-t border-dashed border-zinc-100 dark:border-zinc-800/50"
-                    style={{ marginTop: SLOT_PX - 1 }}
-                  />
+                  {h < 24 && (
+                    <div
+                      className="border-t border-dashed border-zinc-100 dark:border-zinc-800/50"
+                      style={{ marginTop: SLOT_PX - 1 }}
+                    />
+                  )}
                 </div>
               </div>
             ))}
