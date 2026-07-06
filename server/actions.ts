@@ -20,6 +20,14 @@ import {
   deleteRoadmapItem,
   updateItemStatus,
 } from "@/server/roadmaps";
+import {
+  createTestEdge,
+  createTestNode,
+  deleteTestEdge,
+  deleteTestNode,
+  updateTestNode,
+  type Objective,
+} from "@/server/testboard";
 import type { ActionResult } from "@/types";
 
 // Server Actions : la seule porte d'entrée des mutations depuis l'UI.
@@ -200,6 +208,73 @@ export async function deleteDayBlockAction(
   try {
     await deleteDayBlock(blockId, tenantId);
     revalidatePath(`/dashboard/${roadmapId}`);
+    return { ok: true };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+// ── Roadmap « canvas » (blocs + liens + objectifs) ──────────────────────────
+
+export async function createTestNodeAction(
+  roadmapId: string
+): Promise<ActionResult<{ id: string; x: number; y: number }>> {
+  const { tenantId } = await requireUser();
+  try {
+    const node = await createTestNode(roadmapId, tenantId);
+    return { ok: true, data: { id: node.id, x: node.x, y: node.y } };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+export async function updateTestNodeAction(
+  nodeId: string,
+  patch: {
+    title?: string;
+    x?: number;
+    y?: number;
+    color?: string;
+    objectives?: Objective[];
+  }
+): Promise<ActionResult> {
+  const { tenantId } = await requireUser();
+  try {
+    await updateTestNode(nodeId, tenantId, patch);
+    return { ok: true };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+export async function deleteTestNodeAction(nodeId: string): Promise<ActionResult> {
+  const { tenantId } = await requireUser();
+  try {
+    await deleteTestNode(nodeId, tenantId);
+    return { ok: true };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+export async function createTestEdgeAction(
+  roadmapId: string,
+  sourceId: string,
+  targetId: string
+): Promise<ActionResult<{ id: string }>> {
+  const { tenantId } = await requireUser();
+  try {
+    const edge = await createTestEdge(roadmapId, tenantId, sourceId, targetId);
+    return { ok: true, data: { id: edge.id } };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+export async function deleteTestEdgeAction(edgeId: string): Promise<ActionResult> {
+  const { tenantId } = await requireUser();
+  try {
+    await deleteTestEdge(edgeId, tenantId);
     return { ok: true };
   } catch (error) {
     return toError(error);

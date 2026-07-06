@@ -24,6 +24,8 @@ export async function getRoadmap(id: string, tenantId: string) {
     include: {
       items: { orderBy: [{ position: "asc" }, { createdAt: "asc" }] },
       dayBlocks: { orderBy: [{ day: "asc" }, { startMinutes: "asc" }] },
+      testNodes: { orderBy: { createdAt: "asc" } },
+      testEdges: true,
     },
   });
 }

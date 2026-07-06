@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { requireUser } from "@/lib/session";
 import { getRoadmap } from "@/server/roadmaps";
 import { RoadmapBoard } from "@/components/roadmap-board";
+import { NodeBoard } from "@/components/node-board";
 import { ItemForm } from "@/components/item-form";
 import { Button } from "@/components/ui/button";
 
@@ -55,9 +56,24 @@ export default async function RoadmapPage({
       </div>
 
       {roadmap.type === "test" ? (
-        <div className="flex min-h-[40vh] items-center justify-center">
-          <p className="text-4xl font-bold">Bonjour</p>
-        </div>
+        <NodeBoard
+          roadmapId={roadmap.id}
+          initialNodes={roadmap.testNodes.map((n) => ({
+            id: n.id,
+            title: n.title,
+            x: n.x,
+            y: n.y,
+            color: n.color,
+            objectives: Array.isArray(n.objectives)
+              ? (n.objectives as { id: string; label: string; done: boolean }[])
+              : [],
+          }))}
+          initialEdges={roadmap.testEdges.map((e) => ({
+            id: e.id,
+            sourceId: e.sourceId,
+            targetId: e.targetId,
+          }))}
+        />
       ) : (
         <>
           <RoadmapBoard

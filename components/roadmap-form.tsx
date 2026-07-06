@@ -41,8 +41,8 @@ export function RoadmapForm() {
               defaultValue="board"
               className="flex h-10 w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-zinc-700"
             >
-              <option value="board">Tableau</option>
-              <option value="test">Test</option>
+              <option value="board">Tableau (timeline)</option>
+              <option value="test">Canvas (blocs & objectifs)</option>
             </select>
           </div>
           <div className="space-y-2">
