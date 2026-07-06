@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { Map } from "lucide-react";
 import { auth } from "@/lib/auth";
+import { isFounderEmail } from "@/lib/founders";
 import { Button } from "@/components/ui/button";
-import { LogoutButton } from "@/components/logout-button";
+import { UserMenu } from "@/components/user-menu";
 
 export async function Navbar() {
   const session = await auth();
@@ -23,10 +24,11 @@ export async function Navbar() {
               <Button asChild variant="ghost" size="sm">
                 <Link href="/dashboard">Dashboard</Link>
               </Button>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/settings">Paramètres</Link>
-              </Button>
-              <LogoutButton />
+              <UserMenu
+                name={session.user.name ?? ""}
+                email={session.user.email ?? ""}
+                founder={isFounderEmail(session.user.email)}
+              />
             </>
           ) : (
             <>
