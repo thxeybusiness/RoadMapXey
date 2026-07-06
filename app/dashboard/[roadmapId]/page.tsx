@@ -36,29 +36,38 @@ export default async function RoadmapPage({
             <p className="mt-1 text-zinc-500">{roadmap.description}</p>
           )}
         </div>
-        <div className="flex items-center gap-4 text-xs text-zinc-400">
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-zinc-400" />
-            Prévu
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-amber-500 bg-amber-200" />
-            En cours
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
-            Terminé
-          </span>
-        </div>
+        {roadmap.type === "board" && (
+          <div className="flex items-center gap-4 text-xs text-zinc-400">
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-zinc-400" />
+              Prévu
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-amber-500 bg-amber-200" />
+              En cours
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              Terminé
+            </span>
+          </div>
+        )}
       </div>
 
-      <RoadmapBoard
-        items={roadmap.items}
-        roadmapId={roadmap.id}
-        dayBlocks={roadmap.dayBlocks}
-      />
-
-      <ItemForm roadmapId={roadmap.id} />
+      {roadmap.type === "test" ? (
+        <div className="flex min-h-[40vh] items-center justify-center">
+          <p className="text-4xl font-bold">Bonjour</p>
+        </div>
+      ) : (
+        <>
+          <RoadmapBoard
+            items={roadmap.items}
+            roadmapId={roadmap.id}
+            dayBlocks={roadmap.dayBlocks}
+          />
+          <ItemForm roadmapId={roadmap.id} />
+        </>
+      )}
     </div>
   );
 }

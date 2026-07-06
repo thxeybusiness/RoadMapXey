@@ -84,6 +84,7 @@ export async function createRoadmapAction(formData: FormData): Promise<ActionRes
   const parsed = roadmapSchema.safeParse({
     title: formData.get("title"),
     description: formData.get("description") || undefined,
+    type: formData.get("type") ?? "board",
   });
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message };

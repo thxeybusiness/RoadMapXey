@@ -75,6 +75,7 @@ export async function createRoadmap(
     data: {
       title: input.title,
       description: input.description || null,
+      type: input.type,
       tenantId,
       createdById: userId,
     },
