@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
-import { getUserPlan } from "@/lib/subscription";
+import { getUserPlan, isPremium } from "@/lib/subscription";
 import { gradeOf, GRADE_LABEL } from "@/lib/grades";
+import { getTeam } from "@/server/team";
 import { GradeBadge } from "@/components/grade-badge";
+import { TeamSection } from "@/components/team-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,14 +22,16 @@ import { DeleteAccountButton } from "@/components/delete-account-button";
 export const metadata: Metadata = { title: "Paramètres" };
 
 export default async function SettingsPage() {
-  const { userId } = await requireUser();
+  const { userId, tenantId } = await requireUser();
 
-  const [user, plan] = await Promise.all([
+  const [user, plan, team, canInvite] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       include: { subscription: true, tenant: true },
     }),
     getUserPlan(userId),
+    getTeam(tenantId),
+    isPremium(userId),
   ]);
   if (!user) return null;
   const grade = gradeOf(user.email);
@@ -98,6 +102,16 @@ export default async function SettingsPage() {
           )}
         </CardContent>
       </Card>
+
+      {team && (
+        <TeamSection
+          teamName={team.name}
+          members={team.users}
+          invitations={team.invitations.map((i) => ({ id: i.id, email: i.email }))}
+          currentUserId={userId}
+          canInvite={canInvite}
+        />
+      )}
 
       <Card className="border-red-300 dark:border-red-900">
         <CardHeader>

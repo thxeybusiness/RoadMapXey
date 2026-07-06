@@ -45,6 +45,21 @@ export async function sendPaymentConfirmationEmail(to: string) {
   );
 }
 
+export async function sendTeamInviteEmail(
+  to: string,
+  teamName: string,
+  joinUrl: string
+) {
+  await send(
+    to,
+    `Invitation à rejoindre ${teamName} sur RoadMap Business`,
+    `<h1>Vous êtes invité·e à rejoindre ${teamName}</h1>
+     <p>Rejoignez l'espace d'équipe pour collaborer sur les mêmes roadmaps.</p>
+     <p><a href="${joinUrl}">Rejoindre l'équipe</a></p>
+     <p style="color:#888;font-size:12px">Si vous n'avez pas de compte, créez-en un avec cette adresse email, puis rouvrez ce lien.</p>`
+  );
+}
+
 export async function sendSubscriptionCanceledEmail(to: string) {
   await send(
     to,

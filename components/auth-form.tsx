@@ -14,10 +14,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export function AuthForm({ mode }: { mode: "login" | "signup" }) {
+export function AuthForm({
+  mode,
+  callbackUrl,
+}: {
+  mode: "login" | "signup";
+  callbackUrl?: string;
+}) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const isSignup = mode === "signup";
+  const cbSuffix = callbackUrl
+    ? `?callbackUrl=${encodeURIComponent(callbackUrl)}`
+    : "";
 
   function onSubmit(formData: FormData) {
     setError(null);
@@ -41,6 +50,9 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       </CardHeader>
       <CardContent>
         <form action={onSubmit} className="space-y-4">
+          {callbackUrl && (
+            <input type="hidden" name="callbackUrl" value={callbackUrl} />
+          )}
           {isSignup && (
             <div className="space-y-2">
               <Label htmlFor="name">Nom</Label>
@@ -82,14 +94,14 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           {isSignup ? (
             <>
               Déjà un compte ?{" "}
-              <Link href="/login" className="underline">
+              <Link href={`/login${cbSuffix}`} className="underline">
                 Se connecter
               </Link>
             </>
           ) : (
             <>
               Pas encore de compte ?{" "}
-              <Link href="/signup" className="underline">
+              <Link href={`/signup${cbSuffix}`} className="underline">
                 S&apos;inscrire
               </Link>
             </>
