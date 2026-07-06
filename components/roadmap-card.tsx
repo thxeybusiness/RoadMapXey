@@ -11,9 +11,9 @@ const META: Record<
   board: {
     label: "Tableau",
     Icon: Map,
-    chip: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300",
-    bar: "from-emerald-400 to-teal-500",
-    glow: "hover:shadow-emerald-500/25",
+    chip: "bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300",
+    bar: "from-orange-500 to-amber-600",
+    glow: "hover:shadow-orange-500/25",
   },
   test: {
     label: "Canvas",

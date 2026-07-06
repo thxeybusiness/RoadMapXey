@@ -14,7 +14,7 @@ export function StatCard({
   label: string;
   value: number;
   Icon: IconType;
-  accent: "emerald" | "sky" | "teal" | "violet" | "amber";
+  accent: "emerald" | "sky" | "teal" | "violet" | "amber" | "orange";
   index: number;
 }) {
   const tones: Record<string, string> = {
@@ -25,6 +25,8 @@ export function StatCard({
     violet:
       "bg-violet-100 text-violet-600 dark:bg-violet-950/60 dark:text-violet-300",
     amber: "bg-amber-100 text-amber-600 dark:bg-amber-950/60 dark:text-amber-300",
+    orange:
+      "bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300",
   };
 
   return (

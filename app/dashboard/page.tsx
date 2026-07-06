@@ -29,7 +29,7 @@ const CATEGORIES = [
     type: "board",
     label: "Tableau",
     Icon: Map,
-    chip: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300",
+    chip: "bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300",
   },
   {
     type: "test",
@@ -140,7 +140,7 @@ export default async function DashboardPage({
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Roadmaps" value={roadmaps.length} Icon={FolderKanban} accent="emerald" index={0} />
         <StatCard label="Étapes planifiées" value={totalItems} Icon={ListChecks} accent="sky" index={1} />
-        <StatCard label="Tableaux" value={boards} Icon={Map} accent="teal" index={2} />
+        <StatCard label="Tableaux" value={boards} Icon={Map} accent="orange" index={2} />
         <StatCard label="Espaces créatifs" value={creative} Icon={Sparkles} accent="violet" index={3} />
       </section>
 
