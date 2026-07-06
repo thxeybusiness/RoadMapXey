@@ -8,13 +8,13 @@ const features = [
     icon: Map,
     title: "Roadmaps claires",
     description:
-      "Organisez vos chantiers par trimestre et par statut, sans usine à gaz.",
+      "Une timeline par mois, des couloirs par thème, des barres colorées. Sans usine à gaz.",
   },
   {
     icon: Zap,
     title: "Prêt en 2 minutes",
     description:
-      "Inscrivez-vous, créez votre première roadmap, ajoutez vos items. C'est tout.",
+      "Inscrivez-vous, créez votre première roadmap, ajoutez vos étapes. C'est tout.",
   },
   {
     icon: Share2,

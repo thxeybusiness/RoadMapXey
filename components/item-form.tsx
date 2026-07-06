@@ -42,7 +42,7 @@ export function ItemForm({ roadmapId }: { roadmapId: string }) {
       <input type="hidden" name="color" value={color} />
       <Input
         name="title"
-        placeholder="Nouvel item…"
+        placeholder="Nouvelle étape…"
         aria-label="Titre"
         required
         className="h-9 min-w-40 flex-1"
