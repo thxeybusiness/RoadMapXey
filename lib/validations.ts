@@ -16,7 +16,7 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Le mot de passe est requis"),
 });
 
-export const ROADMAP_TYPES = ["board", "test"] as const;
+export const ROADMAP_TYPES = ["board", "test", "test2"] as const;
 
 export const roadmapSchema = z.object({
   title: z.string().min(1, "Le titre est requis").max(200),
