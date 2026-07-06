@@ -97,7 +97,7 @@ export function UserMenu({
 
           <Link href="/dashboard" role="menuitem" className={item} onClick={() => setOpen(false)}>
             <LayoutDashboard className="h-4 w-4 text-zinc-400" />
-            Tableau de bord
+            Dashboard
           </Link>
           <Link href="/settings" role="menuitem" className={item} onClick={() => setOpen(false)}>
             <CreditCard className="h-4 w-4 text-zinc-400" />
