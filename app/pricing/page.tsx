@@ -66,8 +66,8 @@ export default function PricingPage() {
         "Export CSV & image",
         "Support prioritaire",
       ],
-      bar: "from-orange-500 to-amber-600",
-      check: "text-orange-600",
+      bar: "from-emerald-600 to-green-800",
+      check: "text-emerald-700",
       cta: businessPriceId ? (
         <CheckoutButton priceId={businessPriceId}>
           Passer en Business
