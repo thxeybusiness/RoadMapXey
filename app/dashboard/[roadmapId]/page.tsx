@@ -32,7 +32,7 @@ export default async function RoadmapPage({
         : "Tableau";
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <Button asChild variant="ghost" size="icon" className="-ml-1 h-8 w-8 shrink-0">
@@ -44,11 +44,6 @@ export default async function RoadmapPage({
           <span className="shrink-0 rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-semibold text-violet-700 dark:bg-violet-950/60 dark:text-violet-300">
             {typeLabel}
           </span>
-          {roadmap.description && (
-            <p className="hidden truncate text-sm text-zinc-500 sm:block">
-              — {roadmap.description}
-            </p>
-          )}
         </div>
         {roadmap.type === "board" && (
           <div className="flex items-center gap-4 text-xs text-zinc-400">
@@ -68,37 +63,45 @@ export default async function RoadmapPage({
         )}
       </div>
 
-      {roadmap.type === "test2" ? (
-        <ExcelBoardLazy roadmapId={roadmap.id} initialData={roadmap.sheetData} />
-      ) : roadmap.type === "test" ? (
-        <NodeBoard
-          roadmapId={roadmap.id}
-          initialNodes={roadmap.testNodes.map((n) => ({
-            id: n.id,
-            title: n.title,
-            x: n.x,
-            y: n.y,
-            color: n.color,
-            objectives: Array.isArray(n.objectives)
-              ? (n.objectives as { id: string; label: string; done: boolean }[])
-              : [],
-          }))}
-          initialEdges={roadmap.testEdges.map((e) => ({
-            id: e.id,
-            sourceId: e.sourceId,
-            targetId: e.targetId,
-          }))}
-        />
-      ) : (
-        <>
-          <RoadmapBoard
-            items={roadmap.items}
-            roadmapId={roadmap.id}
-            dayBlocks={roadmap.dayBlocks}
-          />
-          <ItemForm roadmapId={roadmap.id} />
-        </>
+      {/* Description sous le titre */}
+      {roadmap.description && (
+        <p className="mt-3 pl-9 text-sm text-zinc-500">{roadmap.description}</p>
       )}
+
+      {/* Espace généreux entre l'en-tête et le contenu de la roadmap */}
+      <div className="mt-12 space-y-6">
+        {roadmap.type === "test2" ? (
+          <ExcelBoardLazy roadmapId={roadmap.id} initialData={roadmap.sheetData} />
+        ) : roadmap.type === "test" ? (
+          <NodeBoard
+            roadmapId={roadmap.id}
+            initialNodes={roadmap.testNodes.map((n) => ({
+              id: n.id,
+              title: n.title,
+              x: n.x,
+              y: n.y,
+              color: n.color,
+              objectives: Array.isArray(n.objectives)
+                ? (n.objectives as { id: string; label: string; done: boolean }[])
+                : [],
+            }))}
+            initialEdges={roadmap.testEdges.map((e) => ({
+              id: e.id,
+              sourceId: e.sourceId,
+              targetId: e.targetId,
+            }))}
+          />
+        ) : (
+          <>
+            <RoadmapBoard
+              items={roadmap.items}
+              roadmapId={roadmap.id}
+              dayBlocks={roadmap.dayBlocks}
+            />
+            <ItemForm roadmapId={roadmap.id} />
+          </>
+        )}
+      </div>
     </div>
   );
 }
