@@ -35,7 +35,7 @@ export default function PricingPage() {
     },
     {
       name: "Pro",
-      price: "9 €",
+      price: "4 €",
       description: "Pour les créateurs qui shippent",
       features: [
         "Roadmaps illimitées",
@@ -57,7 +57,7 @@ export default function PricingPage() {
     },
     {
       name: "Business",
-      price: "24 €",
+      price: "9 €",
       description: "Pour les équipes qui pilotent ensemble",
       features: [
         "Tout le forfait Pro",
