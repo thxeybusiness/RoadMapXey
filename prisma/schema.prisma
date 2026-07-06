@@ -1,0 +1,85 @@
+// Prisma schema — PostgreSQL (Supabase, Neon ou Railway)
+// Multi-tenant : `tenantId` en colonne partout (choix fait dès le départ,
+// plus simple qu'une DB par tenant).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id        String    @id @default(cuid())
+  name      String
+  createdAt DateTime  @default(now())
+  users     User[]
+  roadmaps  Roadmap[]
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String?
+  passwordHash String
+  createdAt    DateTime      @default(now())
+  tenantId     String
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  subscription Subscription?
+  roadmaps     Roadmap[]
+
+  @@index([tenantId])
+}
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String    @unique
+  stripeSubscriptionId String?   @unique
+  status               String    @default("inactive") // active | past_due | canceled | inactive
+  plan                 String    @default("free") // free | premium
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+// ── Fonctionnalité core : les roadmaps produit ──────────────────────────────
+
+enum ItemStatus {
+  PLANNED
+  IN_PROGRESS
+  DONE
+}
+
+model Roadmap {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  tenantId    String
+  tenant      Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   User          @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  items       RoadmapItem[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([tenantId])
+}
+
+model RoadmapItem {
+  id          String     @id @default(cuid())
+  roadmapId   String
+  roadmap     Roadmap    @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  status      ItemStatus @default(PLANNED)
+  quarter     String? // ex : "Q3 2026"
+  position    Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([roadmapId])
+}
