@@ -34,6 +34,18 @@ export function RoadmapForm() {
             <Input id="title" name="title" placeholder="Roadmap produit 2026" required />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="type">Type</Label>
+            <select
+              id="type"
+              name="type"
+              defaultValue="board"
+              className="flex h-10 w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-zinc-700"
+            >
+              <option value="board">Tableau</option>
+              <option value="test">Test</option>
+            </select>
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="description">Description (optionnel)</Label>
             <Textarea
               id="description"
