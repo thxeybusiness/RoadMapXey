@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { sendWelcomeEmail } from "@/lib/email";
+import { generateUniqueUsername } from "@/server/account";
 import type { SignupInput } from "@/lib/validations";
 
 // Inscription : crée le Tenant + le User en DB (callback direct,
@@ -15,10 +16,12 @@ export async function registerUser(input: SignupInput) {
   }
 
   const passwordHash = await bcrypt.hash(input.password, 12);
+  const username = await generateUniqueUsername(input.name || email.split("@")[0]);
 
   const user = await prisma.user.create({
     data: {
       email,
+      username,
       name: input.name,
       passwordHash,
       tenant: { create: { name: `Espace de ${input.name}` } },

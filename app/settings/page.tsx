@@ -4,9 +4,11 @@ import { requireUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { getUserPlan, isPremium } from "@/lib/subscription";
 import { gradeOf, GRADE_LABEL } from "@/lib/grades";
-import { getTeam } from "@/server/team";
+import { getTeam, getReceivedInvitations } from "@/server/team";
+import { ensureUsername } from "@/server/account";
 import { GradeBadge } from "@/components/grade-badge";
 import { TeamSection } from "@/components/team-section";
+import { UsernameCard } from "@/components/username-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,9 +24,12 @@ import { DeleteAccountButton } from "@/components/delete-account-button";
 export const metadata: Metadata = { title: "Paramètres" };
 
 export default async function SettingsPage() {
-  const { userId, tenantId } = await requireUser();
+  const { userId, tenantId, email } = await requireUser();
 
-  const [user, plan, team, canInvite] = await Promise.all([
+  // Attribue un pseudo aux comptes historiques qui n'en auraient pas encore.
+  const username = await ensureUsername(userId);
+
+  const [user, plan, team, canInvite, received] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       include: { subscription: true, tenant: true },
@@ -32,6 +37,7 @@ export default async function SettingsPage() {
     getUserPlan(userId),
     getTeam(tenantId),
     isPremium(userId),
+    getReceivedInvitations(email, tenantId),
   ]);
   if (!user) return null;
   const grade = gradeOf(user.email);
@@ -62,11 +68,19 @@ export default async function SettingsPage() {
           <p>
             <span className="text-zinc-500">Email :</span> {user.email}
           </p>
+          {username && (
+            <p>
+              <span className="text-zinc-500">Nom d&apos;utilisateur :</span>{" "}
+              <span className="font-medium">@{username}</span>
+            </p>
+          )}
           <p>
             <span className="text-zinc-500">Espace :</span> {user.tenant.name}
           </p>
         </CardContent>
       </Card>
+
+      <UsernameCard username={username ?? ""} />
 
       <Card>
         <CardHeader>
@@ -108,6 +122,11 @@ export default async function SettingsPage() {
           teamName={team.name}
           members={team.users}
           invitations={team.invitations.map((i) => ({ id: i.id, email: i.email }))}
+          received={received.map((i) => ({
+            id: i.id,
+            token: i.token,
+            teamName: i.tenant.name,
+          }))}
           currentUserId={userId}
           canInvite={canInvite}
         />

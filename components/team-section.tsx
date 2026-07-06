@@ -1,9 +1,11 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Check, Mail, UserMinus, X } from "lucide-react";
+import { Check, Mail, UserMinus, UserPlus, X } from "lucide-react";
 import {
+  declineInvitationAction,
   inviteMemberAction,
+  joinTeamAction,
   leaveTeamAction,
   renameTeamAction,
   revokeInvitationAction,
@@ -21,17 +23,20 @@ import { Badge } from "@/components/ui/badge";
 
 type Member = { id: string; email: string; name: string | null };
 type Invitation = { id: string; email: string };
+type ReceivedInvitation = { id: string; token: string; teamName: string };
 
 export function TeamSection({
   teamName,
   members,
   invitations,
+  received,
   currentUserId,
   canInvite,
 }: {
   teamName: string;
   members: Member[];
   invitations: Invitation[];
+  received: ReceivedInvitation[];
   currentUserId: string;
   canInvite: boolean;
 }) {
@@ -74,6 +79,53 @@ export function TeamSection({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
+        {/* Invitations reçues : accepter/refuser directement sur le site */}
+        {received.length > 0 && (
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">
+              Invitations reçues
+            </p>
+            {received.map((inv) => (
+              <div
+                key={inv.id}
+                className="flex items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50/60 px-3 py-2 text-sm dark:border-emerald-900 dark:bg-emerald-950/30"
+              >
+                <span className="min-w-0 truncate">
+                  Rejoindre <strong>{inv.teamName}</strong>
+                </span>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    disabled={pending}
+                    onClick={() =>
+                      startTransition(async () => {
+                        const r = await joinTeamAction(inv.token);
+                        if (!r.ok) setError(r.error);
+                      })
+                    }
+                  >
+                    <UserPlus className="h-4 w-4" /> Accepter
+                  </Button>
+                  <button
+                    type="button"
+                    aria-label="Refuser l'invitation"
+                    disabled={pending}
+                    onClick={() =>
+                      startTransition(async () => {
+                        await declineInvitationAction(inv.id);
+                      })
+                    }
+                    className="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-red-600 dark:hover:bg-zinc-800"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Nom de l'équipe */}
         <form action={renameTeam} className="flex items-end gap-2">
           <div className="flex-1 space-y-1">
@@ -141,14 +193,13 @@ export function TeamSection({
         {canInvite ? (
           <form ref={inviteRef} action={invite} className="flex items-end gap-2">
             <div className="flex-1 space-y-1">
-              <label htmlFor="invite-email" className="text-xs text-zinc-500">
-                Inviter par email
+              <label htmlFor="invite-target" className="text-xs text-zinc-500">
+                Inviter par email ou nom d&apos;utilisateur
               </label>
               <Input
-                id="invite-email"
-                name="email"
-                type="email"
-                placeholder="collegue@exemple.com"
+                id="invite-target"
+                name="target"
+                placeholder="collegue@exemple.com ou @pseudo"
                 required
               />
             </div>
