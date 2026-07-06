@@ -52,7 +52,11 @@ export default async function RoadmapPage({
         </div>
       </div>
 
-      <RoadmapBoard items={roadmap.items} />
+      <RoadmapBoard
+        items={roadmap.items}
+        roadmapId={roadmap.id}
+        dayBlocks={roadmap.dayBlocks}
+      />
 
       <ItemForm roadmapId={roadmap.id} />
     </div>

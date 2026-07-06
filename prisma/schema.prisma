@@ -63,6 +63,7 @@ model Roadmap {
   createdById String
   createdBy   User          @relation(fields: [createdById], references: [id], onDelete: Cascade)
   items       RoadmapItem[]
+  dayBlocks   DayBlock[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
@@ -87,4 +88,20 @@ model RoadmapItem {
   updatedAt   DateTime   @updatedAt
 
   @@index([roadmapId])
+}
+
+// Planificateur intra-journalier : créneaux de 30 min pour un jour donné.
+// Totalement indépendant de la timeline principale (ne s'y affiche pas).
+model DayBlock {
+  id           String   @id @default(cuid())
+  roadmapId    String
+  roadmap      Roadmap  @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  day          String // "2026-07-06"
+  startMinutes Int // minutes depuis minuit, multiple de 30
+  endMinutes   Int
+  title        String
+  color        String   @default("violet")
+  createdAt    DateTime @default(now())
+
+  @@index([roadmapId, day])
 }
