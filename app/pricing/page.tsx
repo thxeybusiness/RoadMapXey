@@ -13,83 +13,118 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { CheckoutButton } from "@/components/checkout-button";
 import { FREE_LIMITS } from "@/lib/subscription";
+import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Tarifs" };
+export const metadata: Metadata = { title: "Forfaits" };
 
 export default function PricingPage() {
-  // Le priceId vient du dashboard Stripe, exposé via une variable d'env
-  // publique — jamais de montant codé en dur.
-  const premiumPriceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PREMIUM;
+  // Les priceId viennent du dashboard Stripe, exposés via des variables
+  // d'env publiques — jamais de montant codé en dur.
+  const proPriceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO;
+  const businessPriceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_BUSINESS;
+
+  const plans = [
+    {
+      name: "Gratuit",
+      price: "0 €",
+      description: "Pour découvrir RoadMap Business",
+      features: [
+        `${FREE_LIMITS.maxRoadmaps} roadmap`,
+        `${FREE_LIMITS.maxItemsPerRoadmap} étapes par roadmap`,
+        "Vue Tableau (timeline jour → année)",
+        "Planning journalier 30 min",
+      ],
+      cta: (
+        <Button asChild variant="outline" className="w-full">
+          <Link href="/signup">Commencer gratuitement</Link>
+        </Button>
+      ),
+      highlighted: false,
+    },
+    {
+      name: "Pro",
+      price: "9 €",
+      description: "Pour les créateurs qui shippent",
+      features: [
+        "Roadmaps illimitées",
+        "Étapes illimitées",
+        "Les 3 formats : Tableau, Canvas & Feuille de calcul",
+        "Planning journalier 30 min",
+        "Support par email",
+      ],
+      cta: proPriceId ? (
+        <CheckoutButton priceId={proPriceId}>Passer en Pro</CheckoutButton>
+      ) : (
+        <Button variant="primary" className="w-full" disabled>
+          Bientôt disponible
+        </Button>
+      ),
+      highlighted: true,
+    },
+    {
+      name: "Business",
+      price: "24 €",
+      description: "Pour les équipes qui pilotent ensemble",
+      features: [
+        "Tout le forfait Pro",
+        "Espaces d'équipe partagés",
+        "Rôles & grades personnalisés",
+        "Export CSV & image",
+        "Support prioritaire",
+      ],
+      cta: businessPriceId ? (
+        <CheckoutButton priceId={businessPriceId}>
+          Passer en Business
+        </CheckoutButton>
+      ) : (
+        <Button className="w-full" disabled>
+          Bientôt disponible
+        </Button>
+      ),
+      highlighted: false,
+    },
+  ];
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-24">
-      <h1 className="text-center text-4xl font-bold">Tarifs simples</h1>
+    <div className="mx-auto max-w-5xl px-4 py-20">
+      <h1 className="text-center text-4xl font-bold">Nos forfaits</h1>
       <p className="mt-4 text-center text-zinc-500">
-        Démarrez gratuitement, passez en Premium quand votre équipe grandit.
+        Démarrez gratuitement, montez en gamme quand votre activité grandit.
+        Sans engagement, annulable à tout moment.
       </p>
 
-      <div className="mt-12 grid gap-8 sm:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Gratuit</CardTitle>
-            <CardDescription>Pour découvrir RoadMap Business</CardDescription>
-            <p className="text-4xl font-bold">
-              0 € <span className="text-base font-normal text-zinc-500">/mois</span>
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            {[
-              `${FREE_LIMITS.maxRoadmaps} roadmap`,
-              `${FREE_LIMITS.maxItemsPerRoadmap} étapes par roadmap`,
-              "Timeline jour / semaine / mois / année",
-            ].map((line) => (
-              <p key={line} className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-emerald-600" /> {line}
-              </p>
-            ))}
-          </CardContent>
-          <CardFooter>
-            <Button asChild variant="outline" className="w-full">
-              <Link href="/signup">Commencer gratuitement</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <Card className="border-zinc-900 dark:border-zinc-100">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Premium</CardTitle>
-              <Badge>Populaire</Badge>
-            </div>
-            <CardDescription>Pour les équipes qui shippent</CardDescription>
-            <p className="text-4xl font-bold">
-              9 € <span className="text-base font-normal text-zinc-500">/mois</span>
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            {[
-              "Roadmaps illimitées",
-              "Étapes illimitées",
-              "Support prioritaire",
-              "Annulable à tout moment",
-            ].map((line) => (
-              <p key={line} className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-emerald-600" /> {line}
-              </p>
-            ))}
-          </CardContent>
-          <CardFooter>
-            {premiumPriceId ? (
-              <CheckoutButton priceId={premiumPriceId}>
-                Passer en Premium
-              </CheckoutButton>
-            ) : (
-              <Button className="w-full" disabled>
-                Bientôt disponible
-              </Button>
+      <div className="mt-12 grid items-start gap-6 lg:grid-cols-3">
+        {plans.map((plan) => (
+          <Card
+            key={plan.name}
+            className={cn(
+              "flex h-full flex-col",
+              plan.highlighted &&
+                "border-emerald-500 shadow-md ring-1 ring-emerald-500 dark:border-emerald-500"
             )}
-          </CardFooter>
-        </Card>
+          >
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>{plan.name}</CardTitle>
+                {plan.highlighted && <Badge>Populaire</Badge>}
+              </div>
+              <CardDescription>{plan.description}</CardDescription>
+              <p className="pt-2 text-4xl font-bold">
+                {plan.price}
+                <span className="text-base font-normal text-zinc-500">/mois</span>
+              </p>
+            </CardHeader>
+            <CardContent className="flex-1 space-y-2.5 text-sm">
+              {plan.features.map((line) => (
+                <p key={line} className="flex items-start gap-2">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                  {line}
+                </p>
+              ))}
+            </CardContent>
+            <CardFooter>{plan.cta}</CardFooter>
+          </Card>
+        ))}
       </div>
     </div>
   );

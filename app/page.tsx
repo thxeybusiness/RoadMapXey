@@ -40,7 +40,7 @@ export default function LandingPage() {
             <Link href="/signup">Commencer gratuitement</Link>
           </Button>
           <Button asChild variant="outline" size="lg">
-            <Link href="/pricing">Voir les tarifs</Link>
+            <Link href="/pricing">Voir les forfaits</Link>
           </Button>
         </div>
         <p className="mt-4 flex items-center justify-center gap-1 text-sm text-zinc-500">
