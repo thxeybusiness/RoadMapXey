@@ -5,9 +5,6 @@ import type { RoadmapItem } from "@prisma/client";
 // selon l'échelle choisie ; chaque barre s'étend du bucket de début au
 // bucket de fin.
 
-export const TRACK_DEFAULT = "Général";
-export const UNPLANNED = "__unplanned__";
-
 export type Scale = "day" | "week" | "month" | "year";
 
 export const SCALES: { value: Scale; label: string }[] = [
@@ -82,6 +79,9 @@ export function itemEnd(item: RoadmapItem): Date | null {
 export function isPlanned(item: RoadmapItem): boolean {
   return itemStart(item) !== null;
 }
+
+// (Le regroupement par couloir a été retiré : chaque étape occupe sa
+// propre ligne sur la timeline.)
 
 // ── Manipulation de dates (sans dépendance externe) ──────────────────────────
 
@@ -244,15 +244,4 @@ export function placeItem(
   if (endIdx < startIdx) endIdx = startIdx;
 
   return { startIdx, endIdx };
-}
-
-// Regroupe les étapes par couloir ; celles sans date vont dans UNPLANNED.
-export function groupByTrack(items: RoadmapItem[]): Map<string, RoadmapItem[]> {
-  const groups = new Map<string, RoadmapItem[]>();
-  for (const item of items) {
-    const key = !isPlanned(item) ? UNPLANNED : item.track?.trim() || TRACK_DEFAULT;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(item);
-  }
-  return groups;
 }

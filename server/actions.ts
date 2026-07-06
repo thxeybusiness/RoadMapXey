@@ -114,7 +114,6 @@ export async function createItemAction(formData: FormData): Promise<ActionResult
     title: formData.get("title"),
     description: formData.get("description") || undefined,
     status: formData.get("status") ?? "PLANNED",
-    track: formData.get("track") || "",
     startDate: formData.get("startDate") || "",
     endDate: formData.get("endDate") || "",
     color: formData.get("color") ?? "violet",
