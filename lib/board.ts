@@ -16,18 +16,10 @@ export const SCALES: { value: Scale; label: string }[] = [
 
 // Largeur mini d'une colonne selon l'échelle (px).
 export const SCALE_COL_WIDTH: Record<Scale, number> = {
-  day: 46,
-  week: 68,
-  month: 120,
-  year: 130,
-};
-
-// Nombre max de colonnes pour éviter une grille démesurée.
-const SCALE_MAX_COLS: Record<Scale, number> = {
-  day: 92,
-  week: 60,
-  month: 36,
-  year: 20,
+  day: 44,
+  week: 128,
+  month: 92,
+  year: 220,
 };
 
 const MONTH_ABBR = [
@@ -44,6 +36,23 @@ const MONTH_ABBR = [
   "nov.",
   "déc.",
 ];
+
+const MONTH_FULL = [
+  "janvier",
+  "février",
+  "mars",
+  "avril",
+  "mai",
+  "juin",
+  "juillet",
+  "août",
+  "septembre",
+  "octobre",
+  "novembre",
+  "décembre",
+];
+
+const WEEKDAY_ABBR = ["lun.", "mar.", "mer.", "jeu.", "ven.", "sam.", "dim."];
 
 export type Bucket = {
   key: string;
@@ -103,19 +112,6 @@ function startOfYear(d: Date): Date {
   return new Date(d.getFullYear(), 0, 1);
 }
 
-function bucketStartFor(scale: Scale, d: Date): Date {
-  switch (scale) {
-    case "day":
-      return startOfDay(d);
-    case "week":
-      return startOfWeek(d);
-    case "month":
-      return startOfMonth(d);
-    case "year":
-      return startOfYear(d);
-  }
-}
-
 function nextBucketStart(scale: Scale, d: Date): Date {
   switch (scale) {
     case "day":
@@ -129,99 +125,111 @@ function nextBucketStart(scale: Scale, d: Date): Date {
   }
 }
 
-function labelFor(scale: Scale, start: Date, isFirst: boolean): { label: string; subLabel?: string } {
+// ── Fenêtres fixes par échelle (navigation par drill-down) ───────────────────
+// year : 3 années centrées sur l'ancre
+// month : 12 mois de l'année de l'ancre
+// day : tous les jours du mois de l'ancre (28–31)
+// week : 5 semaines à partir du lundi du mois de l'ancre
+
+function windowStart(scale: Scale, anchor: Date): Date {
   switch (scale) {
-    case "day": {
-      const showMonth = isFirst || start.getDate() === 1;
+    case "day":
+      return startOfMonth(anchor);
+    case "week":
+      return startOfWeek(startOfMonth(anchor));
+    case "month":
+      return startOfYear(anchor);
+    case "year":
+      return new Date(anchor.getFullYear() - 1, 0, 1);
+  }
+}
+
+function windowCount(scale: Scale, anchor: Date): number {
+  switch (scale) {
+    case "day":
+      return new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0).getDate();
+    case "week":
+      return 5;
+    case "month":
+      return 12;
+    case "year":
+      return 3;
+  }
+}
+
+function labelFor(scale: Scale, start: Date): { label: string; subLabel?: string } {
+  switch (scale) {
+    case "day":
       return {
         label: String(start.getDate()),
-        subLabel: showMonth ? MONTH_ABBR[start.getMonth()] : undefined,
+        subLabel: WEEKDAY_ABBR[(start.getDay() + 6) % 7],
       };
-    }
-    case "week": {
+    case "week":
       return {
         label: `${start.getDate()} ${MONTH_ABBR[start.getMonth()]}`,
-        subLabel: isFirst || start.getMonth() === 0 ? String(start.getFullYear()) : undefined,
+        subLabel: "sem.",
       };
-    }
-    case "month": {
-      const withYear = isFirst || start.getMonth() === 0;
-      return {
-        label: MONTH_ABBR[start.getMonth()],
-        subLabel: withYear ? String(start.getFullYear()) : undefined,
-      };
-    }
+    case "month":
+      return { label: MONTH_ABBR[start.getMonth()] };
     case "year":
       return { label: String(start.getFullYear()) };
   }
 }
 
-// ── Génération des colonnes ──────────────────────────────────────────────────
+// ── Génération des colonnes pour la fenêtre courante ─────────────────────────
 
-export function buildBuckets(items: RoadmapItem[], scale: Scale): Bucket[] {
-  const now = new Date();
-  const starts = items.map(itemStart).filter(Boolean) as Date[];
-  const ends = items.map(itemEnd).filter(Boolean) as Date[];
-
-  // Fenêtre par défaut (rien de planifié) centrée autour d'aujourd'hui.
-  const defaultSpan: Record<Scale, number> = { day: 21, week: 10, month: 6, year: 5 };
-  let minDate = bucketStartFor(scale, now);
-  let maxDate = bucketStartFor(scale, now);
-
-  if (starts.length > 0) {
-    minDate = bucketStartFor(scale, new Date(Math.min(...starts.map((d) => d.getTime()))));
-    const latest = new Date(Math.max(...ends.map((d) => d.getTime())));
-    maxDate = bucketStartFor(scale, latest);
-  } else {
-    maxDate = bucketStartFor(scale, addDays(now, defaultSpan.day));
-    if (scale !== "day") {
-      // pour les autres échelles, étend via nextBucketStart
-      let c = minDate;
-      for (let i = 0; i < defaultSpan[scale]; i++) c = nextBucketStart(scale, c);
-      maxDate = c;
-    }
-  }
-
+export function buildBuckets(scale: Scale, anchor: Date): Bucket[] {
+  const now = startOfDay(new Date());
+  const count = windowCount(scale, anchor);
   const buckets: Bucket[] = [];
-  const todayBucket = bucketStartFor(scale, now).getTime();
-  let cursor = minDate;
-  let first = true;
+  let cursor = windowStart(scale, anchor);
 
-  while (cursor.getTime() <= maxDate.getTime() && buckets.length < SCALE_MAX_COLS[scale]) {
+  for (let i = 0; i < count; i++) {
     const end = nextBucketStart(scale, cursor);
-    const { label, subLabel } = labelFor(scale, cursor, first);
+    const { label, subLabel } = labelFor(scale, cursor);
     buckets.push({
       key: cursor.toISOString(),
       label,
       subLabel,
       start: cursor,
       end,
-      isNow: cursor.getTime() === todayBucket,
+      isNow: now.getTime() >= cursor.getTime() && now.getTime() < end.getTime(),
       isWeekend: scale === "day" && (cursor.getDay() === 0 || cursor.getDay() === 6),
     });
     cursor = end;
-    first = false;
   }
-
-  // Minimum de colonnes pour que le tableau respire.
-  const minCols = 5;
-  while (buckets.length < minCols) {
-    const last = buckets[buckets.length - 1];
-    const start = last.end;
-    const end = nextBucketStart(scale, start);
-    const { label, subLabel } = labelFor(scale, start, false);
-    buckets.push({
-      key: start.toISOString(),
-      label,
-      subLabel,
-      start,
-      end,
-      isNow: start.getTime() === todayBucket,
-      isWeekend: scale === "day" && (start.getDay() === 0 || start.getDay() === 6),
-    });
-  }
-
   return buckets;
+}
+
+// Décale l'ancre d'une fenêtre vers l'avant (+1) ou l'arrière (-1).
+export function shiftAnchor(scale: Scale, anchor: Date, dir: 1 | -1): Date {
+  switch (scale) {
+    case "day":
+      return new Date(anchor.getFullYear(), anchor.getMonth() + dir, 1);
+    case "week":
+      return addDays(anchor, dir * 35);
+    case "month":
+      return new Date(anchor.getFullYear() + dir, anchor.getMonth(), 1);
+    case "year":
+      return new Date(anchor.getFullYear() + dir * 3, anchor.getMonth(), 1);
+  }
+}
+
+// Libellé de la période affichée (barre de navigation).
+export function periodLabel(scale: Scale, anchor: Date): string {
+  switch (scale) {
+    case "day":
+      return `${MONTH_FULL[anchor.getMonth()]} ${anchor.getFullYear()}`;
+    case "week": {
+      const s = windowStart("week", anchor);
+      const e = addDays(s, 34);
+      return `${s.getDate()} ${MONTH_ABBR[s.getMonth()]} – ${e.getDate()} ${MONTH_ABBR[e.getMonth()]} ${e.getFullYear()}`;
+    }
+    case "month":
+      return String(anchor.getFullYear());
+    case "year":
+      return `${anchor.getFullYear() - 1} – ${anchor.getFullYear() + 1}`;
+  }
 }
 
 // Coordonnée continue d'une date sur l'axe (0 = bord gauche de la 1re
@@ -267,4 +275,19 @@ export function itemSpanPercent(
     leftPct: (startCoord / n) * 100,
     widthPct: ((endCoord - startCoord) / n) * 100,
   };
+}
+
+// L'étape chevauche-t-elle la fenêtre visible ?
+export function overlapsWindow(item: RoadmapItem, buckets: Bucket[]): boolean {
+  const s = itemStart(item);
+  if (!s) return false;
+  const eInclusive = itemEnd(item) ?? s;
+  const eExclusive = new Date(
+    eInclusive.getFullYear(),
+    eInclusive.getMonth(),
+    eInclusive.getDate() + 1
+  );
+  const winStart = buckets[0].start.getTime();
+  const winEnd = buckets[buckets.length - 1].end.getTime();
+  return s.getTime() < winEnd && eExclusive.getTime() > winStart;
 }
