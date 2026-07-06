@@ -76,7 +76,10 @@ model RoadmapItem {
   title       String
   description String?
   status      ItemStatus @default(PLANNED)
-  quarter     String? // ex : "Q3 2026"
+  track       String? // couloir / swimlane, ex : "Marketing"
+  startMonth  String? // "2026-07" — début de la barre sur la timeline
+  endMonth    String? // "2026-09" — fin de la barre (inclus)
+  color       String     @default("violet") // violet | blue | emerald | amber | rose | cyan
   position    Int        @default(0)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
