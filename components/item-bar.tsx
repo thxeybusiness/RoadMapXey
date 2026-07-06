@@ -42,21 +42,18 @@ function StatusIcon({ status }: { status: RoadmapItem["status"] }) {
 
 export function ItemBar({
   item,
-  compact = false,
-  style,
+  fill = false,
 }: {
   item: RoadmapItem;
-  compact?: boolean;
-  style?: React.CSSProperties;
+  fill?: boolean; // remplit la largeur proportionnelle sur la timeline
 }) {
   const [pending, startTransition] = useTransition();
 
   return (
     <div
-      style={style}
       className={cn(
-        "group relative z-10 flex items-center gap-1.5 rounded-full border px-3 shadow-sm transition-all hover:shadow-md",
-        compact ? "py-1" : "py-1.5",
+        "group relative z-10 flex items-center gap-1 overflow-hidden rounded-full border px-2 py-1 shadow-sm transition-all hover:z-30 hover:shadow-md",
+        fill && "h-7 w-full",
         COLOR_CLASSES[item.color] ?? COLOR_CLASSES.violet,
         item.status === "DONE" && "opacity-60",
         pending && "opacity-40"
@@ -78,7 +75,7 @@ export function ItemBar({
       </button>
       <span
         className={cn(
-          "min-w-0 flex-1 truncate text-sm font-medium",
+          "min-w-0 flex-1 truncate text-xs font-medium",
           item.status === "DONE" && "line-through"
         )}
         title={item.description ? `${item.title} — ${item.description}` : item.title}

@@ -224,24 +224,47 @@ export function buildBuckets(items: RoadmapItem[], scale: Scale): Bucket[] {
   return buckets;
 }
 
-// Place une barre : index de première et dernière colonne chevauchées.
-export function placeItem(
+// Coordonnée continue d'une date sur l'axe (0 = bord gauche de la 1re
+// colonne, n = bord droit de la dernière). Interpole DANS la colonne pour
+// un rendu proportionnel, tout en restant aligné sur les colonnes égales.
+export function dateCoord(date: Date, buckets: Bucket[]): number {
+  const n = buckets.length;
+  if (date.getTime() <= buckets[0].start.getTime()) return 0;
+  if (date.getTime() >= buckets[n - 1].end.getTime()) return n;
+  for (let i = 0; i < n; i++) {
+    const b = buckets[i];
+    if (date.getTime() < b.end.getTime()) {
+      const frac =
+        (date.getTime() - b.start.getTime()) /
+        (b.end.getTime() - b.start.getTime());
+      return i + frac;
+    }
+  }
+  return n;
+}
+
+// Position proportionnelle d'une barre, en % de la largeur totale.
+// La date de fin est inclusive → on ajoute un jour pour couvrir sa journée.
+export function itemSpanPercent(
   item: RoadmapItem,
   buckets: Bucket[]
-): { startIdx: number; endIdx: number } | null {
+): { leftPct: number; widthPct: number } | null {
   const s = itemStart(item);
-  const e = itemEnd(item) ?? s;
-  if (!s || !e) return null;
+  if (!s) return null;
+  const eInclusive = itemEnd(item) ?? s;
+  const eExclusive = new Date(
+    eInclusive.getFullYear(),
+    eInclusive.getMonth(),
+    eInclusive.getDate() + 1
+  );
 
-  let startIdx = buckets.findIndex((b) => b.end.getTime() > s.getTime());
-  if (startIdx === -1) startIdx = buckets.length - 1;
+  const n = buckets.length;
+  const startCoord = dateCoord(s, buckets);
+  let endCoord = dateCoord(eExclusive, buckets);
+  if (endCoord <= startCoord) endCoord = startCoord + 0.02; // reste visible
 
-  let endIdx = -1;
-  for (let i = 0; i < buckets.length; i++) {
-    if (buckets[i].start.getTime() <= e.getTime()) endIdx = i;
-  }
-  if (endIdx === -1) endIdx = startIdx;
-  if (endIdx < startIdx) endIdx = startIdx;
-
-  return { startIdx, endIdx };
+  return {
+    leftPct: (startCoord / n) * 100,
+    widthPct: ((endCoord - startCoord) / n) * 100,
+  };
 }
