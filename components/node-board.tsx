@@ -42,9 +42,46 @@ const DOT_COLORS: Record<string, string> = {
   rose: "bg-rose-400",
   cyan: "bg-cyan-400",
 };
+// Couleur de trait (dégradé des liens) par couleur de bloc.
+const STROKE_HEX: Record<string, string> = {
+  violet: "#8b5cf6",
+  blue: "#3b82f6",
+  emerald: "#10b981",
+  amber: "#f59e0b",
+  rose: "#f43f5e",
+  cyan: "#06b6d4",
+};
+
+const CANVAS_W = 6000;
+const CANVAS_H = 4000;
 
 function isComplete(n: Node) {
   return n.objectives.length > 0 && n.objectives.every((o) => o.done);
+}
+
+// Couleur effective d'un bloc : vert s'il est complet, sinon sa couleur.
+function edgeColor(n: Node) {
+  return isComplete(n) ? STROKE_HEX.emerald : STROKE_HEX[n.color] ?? STROKE_HEX.violet;
+}
+
+// Point où le segment (centre→cible) coupe le bord du rectangle du bloc,
+// pour que le trait frôle le bord au lieu de passer derrière.
+function borderPoint(
+  cx: number,
+  cy: number,
+  w: number,
+  h: number,
+  tx: number,
+  ty: number
+) {
+  const dx = tx - cx;
+  const dy = ty - cy;
+  if (dx === 0 && dy === 0) return { x: cx, y: cy };
+  const scale = Math.min(
+    dx !== 0 ? w / 2 / Math.abs(dx) : Infinity,
+    dy !== 0 ? h / 2 / Math.abs(dy) : Infinity
+  );
+  return { x: cx + dx * scale, y: cy + dy * scale };
 }
 
 export function NodeBoard({
@@ -60,8 +97,38 @@ export function NodeBoard({
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
   const [connecting, setConnecting] = useState(false);
   const [linkSource, setLinkSource] = useState<string | null>(null);
+  const [sizes, setSizes] = useState<Record<string, { w: number; h: number }>>({});
   const canvasRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ id: string; offX: number; offY: number } | null>(null);
+  const observers = useRef<Record<string, ResizeObserver>>({});
+
+  // Mesure la taille réelle de chaque bloc (hauteur variable selon les
+  // objectifs) pour ancrer les liens sur les bords.
+  const measureRef = useCallback(
+    (id: string) => (el: HTMLDivElement | null) => {
+      if (!el) {
+        observers.current[id]?.disconnect();
+        delete observers.current[id];
+        return;
+      }
+      const update = () =>
+        setSizes((s) => {
+          const w = el.offsetWidth;
+          const h = el.offsetHeight;
+          if (s[id]?.w === w && s[id]?.h === h) return s;
+          return { ...s, [id]: { w, h } };
+        });
+      update();
+      const ro = new ResizeObserver(update);
+      ro.observe(el);
+      observers.current[id] = ro;
+    },
+    []
+  );
+
+  function sizeOf(id: string) {
+    return sizes[id] ?? { w: NODE_WIDTH, h: 90 };
+  }
 
   // Persiste un bloc (patch complet) en base, sans recharger le canvas.
   const persist = useCallback((n: Node) => {
@@ -173,25 +240,27 @@ export function NodeBoard({
     }
   }
 
-  // ── Drag ──
-  function onPointerDown(e: React.PointerEvent, node: Node) {
+  // ── Drag : cliquer-glisser n'importe où sur le bloc (sauf les contrôles) ──
+  function onCardPointerDown(e: React.PointerEvent, node: Node) {
     if (connecting) {
       onNodeSelect(node.id);
       return;
     }
+    // Ne pas déclencher le déplacement en interagissant avec un champ/bouton.
+    if ((e.target as HTMLElement).closest("input, button, textarea")) return;
     const rect = canvasRef.current!.getBoundingClientRect();
     drag.current = {
       id: node.id,
-      offX: e.clientX - rect.left - node.x,
-      offY: e.clientY - rect.top - node.y,
+      offX: e.clientX - rect.left + canvasRef.current!.scrollLeft - node.x,
+      offY: e.clientY - rect.top + canvasRef.current!.scrollTop - node.y,
     };
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    canvasRef.current!.setPointerCapture(e.pointerId);
   }
   function onPointerMove(e: React.PointerEvent) {
     if (!drag.current) return;
     const rect = canvasRef.current!.getBoundingClientRect();
-    const x = Math.max(0, e.clientX - rect.left - drag.current.offX);
-    const y = Math.max(0, e.clientY - rect.top - drag.current.offY);
+    const x = Math.max(0, e.clientX - rect.left + canvasRef.current!.scrollLeft - drag.current.offX);
+    const y = Math.max(0, e.clientY - rect.top + canvasRef.current!.scrollTop - drag.current.offY);
     patchNode(drag.current.id, { x, y }, false);
   }
   function onPointerUp() {
@@ -201,10 +270,21 @@ export function NodeBoard({
     drag.current = null;
   }
 
-  function anchor(id: string) {
-    const n = nodes.find((x) => x.id === id);
-    if (!n) return { x: 0, y: 0 };
-    return { x: n.x + NODE_WIDTH / 2, y: n.y + 22 };
+  // Points d'ancrage des liens sur les bords des deux blocs.
+  function edgePoints(edge: Edge) {
+    const s = nodes.find((n) => n.id === edge.sourceId);
+    const t = nodes.find((n) => n.id === edge.targetId);
+    if (!s || !t) return null;
+    const ss = sizeOf(s.id);
+    const ts = sizeOf(t.id);
+    const sc = { x: s.x + ss.w / 2, y: s.y + ss.h / 2 };
+    const tc = { x: t.x + ts.w / 2, y: t.y + ts.h / 2 };
+    return {
+      a: borderPoint(sc.x, sc.y, ss.w, ss.h, tc.x, tc.y),
+      b: borderPoint(tc.x, tc.y, ts.w, ts.h, sc.x, sc.y),
+      colorA: edgeColor(s),
+      colorB: edgeColor(t),
+    };
   }
 
   return (
@@ -243,32 +323,55 @@ export function NodeBoard({
         onPointerUp={onPointerUp}
         className="relative h-[70vh] overflow-auto rounded-2xl border border-zinc-200 bg-[radial-gradient(circle,theme(colors.zinc.200)_1px,transparent_1px)] [background-size:20px_20px] dark:border-zinc-800 dark:bg-[radial-gradient(circle,theme(colors.zinc.800)_1px,transparent_1px)]"
       >
-        <div className="relative" style={{ width: 2000, height: 1400 }}>
-          {/* Liens */}
+        <div className="relative" style={{ width: CANVAS_W, height: CANVAS_H }}>
+          {/* Liens : trait qui frôle les bords, dégradé entre les 2 couleurs */}
           <svg className="pointer-events-none absolute inset-0 h-full w-full">
+            <defs>
+              {edges.map((e) => {
+                const p = edgePoints(e);
+                if (!p) return null;
+                return (
+                  <linearGradient
+                    key={`grad-${e.id}`}
+                    id={`grad-${e.id}`}
+                    gradientUnits="userSpaceOnUse"
+                    x1={p.a.x}
+                    y1={p.a.y}
+                    x2={p.b.x}
+                    y2={p.b.y}
+                  >
+                    <stop offset="0%" stopColor={p.colorA} />
+                    <stop offset="100%" stopColor={p.colorB} />
+                  </linearGradient>
+                );
+              })}
+            </defs>
             {edges.map((e) => {
-              const a = anchor(e.sourceId);
-              const b = anchor(e.targetId);
+              const p = edgePoints(e);
+              if (!p) return null;
+              const mx = (p.a.x + p.b.x) / 2;
+              const my = (p.a.y + p.b.y) / 2;
               return (
                 <g key={e.id}>
                   <line
-                    x1={a.x}
-                    y1={a.y}
-                    x2={b.x}
-                    y2={b.y}
-                    className="stroke-zinc-400 dark:stroke-zinc-600"
-                    strokeWidth={2}
+                    x1={p.a.x}
+                    y1={p.a.y}
+                    x2={p.b.x}
+                    y2={p.b.y}
+                    stroke={`url(#grad-${e.id})`}
+                    strokeWidth={3}
+                    strokeLinecap="round"
                   />
                   <circle
-                    cx={(a.x + b.x) / 2}
-                    cy={(a.y + b.y) / 2}
+                    cx={mx}
+                    cy={my}
                     r={8}
                     className="pointer-events-auto cursor-pointer fill-white stroke-zinc-300 hover:fill-red-50 dark:fill-zinc-900"
                     onClick={() => removeEdge(e.id)}
                   />
                   <text
-                    x={(a.x + b.x) / 2}
-                    y={(a.y + b.y) / 2 + 3}
+                    x={mx}
+                    y={my + 3}
                     textAnchor="middle"
                     className="pointer-events-none fill-red-500 text-[10px]"
                   >
@@ -286,8 +389,13 @@ export function NodeBoard({
             return (
               <div
                 key={node.id}
+                ref={measureRef(node.id)}
+                onPointerDown={(e) => onCardPointerDown(e, node)}
                 className={cn(
-                  "absolute w-[236px] rounded-xl border shadow-sm transition-all duration-500",
+                  "absolute w-[236px] rounded-xl border shadow-sm transition-[background,border-color] duration-500",
+                  connecting
+                    ? "cursor-pointer"
+                    : "cursor-grab active:cursor-grabbing",
                   complete
                     ? "border-emerald-400 bg-gradient-to-br from-emerald-100 to-emerald-300 dark:from-emerald-900/60 dark:to-emerald-700/50"
                     : CARD_COLORS[node.color] ?? CARD_COLORS.violet,
@@ -300,14 +408,8 @@ export function NodeBoard({
                 )}
                 style={{ left: node.x, top: node.y }}
               >
-                {/* En-tête (poignée de déplacement / sélection) */}
-                <div
-                  onPointerDown={(e) => onPointerDown(e, node)}
-                  className={cn(
-                    "flex items-center gap-1 rounded-t-xl px-2 py-1.5",
-                    connecting ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"
-                  )}
-                >
+                {/* En-tête */}
+                <div className="flex items-center gap-1 rounded-t-xl px-2 py-1.5">
                   {complete && <Check className="h-4 w-4 shrink-0 text-emerald-700" />}
                   <input
                     value={node.title}
