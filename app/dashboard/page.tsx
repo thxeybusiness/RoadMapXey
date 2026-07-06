@@ -86,7 +86,13 @@ export default async function DashboardPage({
                       <CardTitle className="hover:underline">
                         {roadmap.title}{" "}
                         <span className="font-normal text-zinc-400">
-                          ({roadmap.type === "test" ? "Canvas" : "Tableau"})
+                          (
+                          {roadmap.type === "test"
+                            ? "Canvas"
+                            : roadmap.type === "test2"
+                              ? "Test 2"
+                              : "Tableau"}
+                          )
                         </span>
                       </CardTitle>
                       <CardDescription className="mt-1.5">

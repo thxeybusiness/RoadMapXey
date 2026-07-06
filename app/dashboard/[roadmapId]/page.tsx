@@ -55,7 +55,12 @@ export default async function RoadmapPage({
         )}
       </div>
 
-      {roadmap.type === "test" ? (
+      {roadmap.type === "test2" ? (
+        <div className="flex min-h-[40vh] flex-col items-center justify-center gap-2">
+          <p className="text-4xl font-bold">Test 2</p>
+          <p className="text-zinc-500">Ce type de roadmap reste à construire.</p>
+        </div>
+      ) : roadmap.type === "test" ? (
         <NodeBoard
           roadmapId={roadmap.id}
           initialNodes={roadmap.testNodes.map((n) => ({

@@ -43,6 +43,7 @@ export function RoadmapForm() {
             >
               <option value="board">Tableau (timeline)</option>
               <option value="test">Canvas (blocs & objectifs)</option>
+              <option value="test2">Test 2</option>
             </select>
           </div>
           <div className="space-y-2">
