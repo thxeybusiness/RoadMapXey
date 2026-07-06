@@ -24,18 +24,30 @@ export default async function RoadmapPage({
   const roadmap = await getRoadmap(roadmapId, tenantId);
   if (!roadmap) notFound();
 
+  const typeLabel =
+    roadmap.type === "test"
+      ? "Canvas"
+      : roadmap.type === "test2"
+        ? "Feuille de calcul"
+        : "Tableau";
+
   return (
-    <div className="mx-auto max-w-7xl space-y-8 px-4 py-10">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">
-            <Link href="/dashboard">
-              <ArrowLeft className="h-4 w-4" /> Mes roadmaps
+    <div className="mx-auto max-w-7xl space-y-3 px-4 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <Button asChild variant="ghost" size="icon" className="-ml-1 h-8 w-8 shrink-0">
+            <Link href="/dashboard" aria-label="Mes roadmaps">
+              <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <h1 className="text-3xl font-bold">{roadmap.title}</h1>
+          <h1 className="truncate text-2xl font-bold">{roadmap.title}</h1>
+          <span className="shrink-0 rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-semibold text-violet-700 dark:bg-violet-950/60 dark:text-violet-300">
+            {typeLabel}
+          </span>
           {roadmap.description && (
-            <p className="mt-1 text-zinc-500">{roadmap.description}</p>
+            <p className="hidden truncate text-sm text-zinc-500 sm:block">
+              — {roadmap.description}
+            </p>
           )}
         </div>
         {roadmap.type === "board" && (
