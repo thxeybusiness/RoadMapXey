@@ -205,13 +205,13 @@ export function ExcelBoard({
       </div>
       <div className="overflow-hidden rounded-2xl border border-zinc-200 shadow-sm dark:border-zinc-800">
         {!ready && (
-          <div className="flex h-[86vh] items-center justify-center text-sm text-zinc-400">
+          <div className="flex h-[155vh] items-center justify-center text-sm text-zinc-400">
             Chargement de la feuille de calcul…
           </div>
         )}
         <div
           ref={containerRef}
-          style={{ height: ready ? "86vh" : 0 }}
+          style={{ height: ready ? "155vh" : 0 }}
           className="univer-container"
         />
       </div>
