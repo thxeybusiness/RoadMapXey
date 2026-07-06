@@ -84,7 +84,10 @@ export default async function DashboardPage({
                   <div className="flex items-start justify-between gap-2">
                     <Link href={`/dashboard/${roadmap.id}`} className="min-w-0">
                       <CardTitle className="hover:underline">
-                        {roadmap.title}
+                        {roadmap.title}{" "}
+                        <span className="font-normal text-zinc-400">
+                          ({roadmap.type === "test" ? "Canvas" : "Tableau"})
+                        </span>
                       </CardTitle>
                       <CardDescription className="mt-1.5">
                         {roadmap.description || "Sans description"} ·{" "}
