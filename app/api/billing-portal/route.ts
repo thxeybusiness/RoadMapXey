@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
+import { getBaseUrl } from "@/lib/env";
 
 // Portail client Stripe : l'utilisateur peut y annuler son abonnement,
 // changer de carte, télécharger ses factures.
@@ -20,7 +21,7 @@ export async function POST() {
   try {
     const portal = await stripe.billingPortal.sessions.create({
       customer: subscription.stripeCustomerId,
-      return_url: `${process.env.NEXT_PUBLIC_URL}/settings`,
+      return_url: `${getBaseUrl()}/settings`,
     });
     return Response.json({ url: portal.url });
   } catch (error) {

@@ -3,10 +3,13 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations";
+import { getAuthSecret } from "@/lib/env";
 
 // Auth déléguée à NextAuth (Auth.js) — on ne code pas la crypto de session
 // soi-même. Sessions JWT : pas de table de sessions à gérer.
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: getAuthSecret(),
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
   providers: [

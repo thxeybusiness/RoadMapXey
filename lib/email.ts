@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { getBaseUrl } from "@/lib/env";
 
 // Emails transactionnels via Resend.
 // Sans RESEND_API_KEY, on log au lieu d'envoyer — l'app ne casse jamais
@@ -30,7 +31,7 @@ export async function sendWelcomeEmail(to: string, name: string) {
     "Bienvenue sur RoadMapXey 🎉",
     `<h1>Bienvenue ${name} !</h1>
      <p>Votre compte RoadMapXey est prêt. Créez votre première roadmap dès maintenant :</p>
-     <p><a href="${process.env.NEXT_PUBLIC_URL}/dashboard">Accéder au dashboard</a></p>`
+     <p><a href="${getBaseUrl()}/dashboard">Accéder au dashboard</a></p>`
   );
 }
 
@@ -40,7 +41,7 @@ export async function sendPaymentConfirmationEmail(to: string) {
     "Paiement confirmé — bienvenue en Premium ✨",
     `<h1>Merci pour votre abonnement !</h1>
      <p>Votre compte est passé en <strong>Premium</strong> : roadmaps et items illimités.</p>
-     <p><a href="${process.env.NEXT_PUBLIC_URL}/dashboard">Retourner au dashboard</a></p>`
+     <p><a href="${getBaseUrl()}/dashboard">Retourner au dashboard</a></p>`
   );
 }
 
@@ -50,6 +51,6 @@ export async function sendSubscriptionCanceledEmail(to: string) {
     "Votre abonnement a été annulé",
     `<h1>Abonnement annulé</h1>
      <p>Votre abonnement Premium est annulé. Vous repassez au plan gratuit à la fin de la période en cours.</p>
-     <p>Vous pouvez vous réabonner à tout moment depuis la <a href="${process.env.NEXT_PUBLIC_URL}/pricing">page tarifs</a>.</p>`
+     <p>Vous pouvez vous réabonner à tout moment depuis la <a href="${getBaseUrl()}/pricing">page tarifs</a>.</p>`
   );
 }
