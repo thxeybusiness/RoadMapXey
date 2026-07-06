@@ -18,10 +18,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className="h-full antialiased">
-      <body className="flex min-h-full flex-col bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+      <body className="flex min-h-full flex-col bg-emerald-50 text-zinc-900 dark:bg-[#081210] dark:text-zinc-50">
         <Navbar />
         <main className="flex-1">{children}</main>
-        <footer className="border-t border-zinc-200 py-6 text-center text-sm text-zinc-500 dark:border-zinc-800">
+        <footer className="border-t border-emerald-100 py-6 text-center text-sm text-zinc-500 dark:border-emerald-950/60">
           © {new Date().getFullYear()} RoadMap Business
         </footer>
       </body>
