@@ -32,7 +32,7 @@ export default function LandingPage() {
           Votre roadmap produit, enfin lisible.
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-zinc-500">
-          RoadMapXey vous aide à planifier, prioriser et partager les chantiers
+          RoadMap Business vous aide à planifier, prioriser et partager les chantiers
           de votre produit — sans tableur ni outil hors de prix.
         </p>
         <div className="mt-10 flex items-center justify-center gap-4">
