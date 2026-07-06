@@ -32,7 +32,7 @@ export default async function RoadmapPage({
         : "Tableau";
 
   return (
-    <div className="mx-auto max-w-7xl space-y-3 px-4 py-4">
+    <div className="mx-auto max-w-7xl space-y-5 px-4 py-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <Button asChild variant="ghost" size="icon" className="-ml-1 h-8 w-8 shrink-0">
