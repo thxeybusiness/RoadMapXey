@@ -6,7 +6,6 @@ import {
   ListChecks,
   Map,
   Network,
-  Rocket,
   Sparkles,
   Table2,
 } from "lucide-react";
@@ -119,21 +118,13 @@ export default async function DashboardPage({
           )}
         </div>
 
-        <div className="relative mt-6 flex flex-wrap gap-3">
-          <Button
-            asChild
-            className="bg-white text-emerald-700 shadow-sm hover:bg-emerald-50"
-          >
-            <a href="#nouvelle">
-              <Rocket className="h-4 w-4" /> Nouvelle roadmap
-            </a>
-          </Button>
-          {grade && (
+        {grade && (
+          <div className="relative mt-6 flex flex-wrap gap-3">
             <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1.5 text-sm text-emerald-50 ring-1 ring-inset ring-white/20">
               Accès {GRADE_LABEL[grade]} — illimité
             </span>
-          )}
-        </div>
+          </div>
+        )}
       </section>
 
       {/* ── Statistiques ─────────────────────────────────────────────────── */}
