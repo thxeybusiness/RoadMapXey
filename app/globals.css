@@ -97,6 +97,16 @@ body {
   animation: rb-gradient 8s ease infinite;
 }
 
+/* Hero : entrée en fondu + dégradé animé combinés sur le même élément
+   (sinon l'une des deux animations écrase l'autre et l'opacité reste à 0). */
+.rb-hero {
+  opacity: 0;
+  background-size: 200% 200%;
+  animation:
+    rb-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    rb-gradient 8s ease infinite;
+}
+
 .rb-ping {
   animation: rb-ring 1.8s ease-out infinite;
 }
@@ -127,6 +137,7 @@ body {
   .rb-pop,
   .rb-float,
   .rb-gradient,
+  .rb-hero,
   .rb-ping {
     animation: none !important;
     opacity: 1 !important;

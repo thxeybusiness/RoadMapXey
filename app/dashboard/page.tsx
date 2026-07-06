@@ -22,6 +22,33 @@ import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
+// Catégories de roadmaps : chaque type a son en-tête coloré. Les types
+// inconnus retombent sur « Tableau ».
+const CATEGORIES = [
+  {
+    type: "board",
+    label: "Tableau",
+    Icon: Map,
+    chip: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300",
+  },
+  {
+    type: "test",
+    label: "Canvas",
+    Icon: Network,
+    chip: "bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300",
+  },
+  {
+    type: "test2",
+    label: "Feuille de calcul",
+    Icon: Table2,
+    chip: "bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300",
+  },
+] as const;
+
+function categoryOf(type: string): string {
+  return CATEGORIES.some((c) => c.type === type) ? type : "board";
+}
+
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -60,7 +87,7 @@ export default async function DashboardPage({
       )}
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="rb-reveal rb-gradient relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-8 text-white shadow-lg shadow-emerald-600/25 sm:p-10">
+      <section className="rb-hero relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-8 text-white shadow-lg shadow-emerald-600/25 sm:p-10">
         {/* Icônes décoratives flottantes */}
         <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.13]">
           <Map className="rb-float absolute right-10 top-6 h-32 w-32" />
@@ -138,12 +165,14 @@ export default async function DashboardPage({
 
       {/* ── Roadmaps + formulaire ────────────────────────────────────────── */}
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold tracking-tight">Mes roadmaps</h2>
-            <span className="text-sm text-zinc-400">
-              {roadmaps.length} au total
-            </span>
+        <div className="space-y-8">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              Mes roadmaps
+            </h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Rangées par catégorie · {roadmaps.length} au total
+            </p>
           </div>
 
           {roadmaps.length === 0 ? (
@@ -161,19 +190,45 @@ export default async function DashboardPage({
               <ArrowRight className="mt-4 hidden h-5 w-5 animate-pulse text-emerald-500 lg:block" />
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {roadmaps.map((roadmap, i) => (
-                <RoadmapCard
-                  key={roadmap.id}
-                  id={roadmap.id}
-                  title={roadmap.title}
-                  description={roadmap.description}
-                  type={roadmap.type}
-                  itemCount={roadmap._count.items}
-                  index={i}
-                />
-              ))}
-            </div>
+            (() => {
+              let idx = 0;
+              return CATEGORIES.map((cat) => {
+                const list = roadmaps.filter(
+                  (r) => (categoryOf(r.type)) === cat.type
+                );
+                if (list.length === 0) return null;
+                return (
+                  <section key={cat.type} className="space-y-3">
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${cat.chip}`}
+                      >
+                        <cat.Icon className="h-4 w-4" />
+                      </span>
+                      <h3 className="text-lg font-semibold tracking-tight">
+                        {cat.label}
+                      </h3>
+                      <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                        {list.length}
+                      </span>
+                    </div>
+                    <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(230px,1fr))]">
+                      {list.map((roadmap) => (
+                        <RoadmapCard
+                          key={roadmap.id}
+                          id={roadmap.id}
+                          title={roadmap.title}
+                          description={roadmap.description}
+                          type={roadmap.type}
+                          itemCount={roadmap._count.items}
+                          index={idx++}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                );
+              });
+            })()
           )}
         </div>
 

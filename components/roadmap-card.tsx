@@ -76,11 +76,13 @@ export function RoadmapCard({
           {description || "Sans description"}
         </p>
 
-        <div className="mt-4 flex items-center gap-3 text-xs">
-          <span className={`rounded-full px-2.5 py-1 font-semibold ${meta.chip}`}>
+        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+          <span
+            className={`whitespace-nowrap rounded-full px-2.5 py-1 font-semibold ${meta.chip}`}
+          >
             {meta.label}
           </span>
-          <span className="inline-flex items-center gap-1 text-zinc-400">
+          <span className="inline-flex items-center gap-1 whitespace-nowrap text-zinc-400">
             <ListChecks className="h-3.5 w-3.5" />
             {itemCount} étape{itemCount > 1 ? "s" : ""}
           </span>
