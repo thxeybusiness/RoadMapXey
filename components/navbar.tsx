@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Map } from "lucide-react";
 import { auth } from "@/lib/auth";
-import { isFounderEmail } from "@/lib/founders";
+import { gradeOf } from "@/lib/grades";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/user-menu";
 
@@ -27,7 +27,7 @@ export async function Navbar() {
               <UserMenu
                 name={session.user.name ?? ""}
                 email={session.user.email ?? ""}
-                founder={isFounderEmail(session.user.email)}
+                grade={gradeOf(session.user.email)}
               />
             </>
           ) : (

@@ -3,8 +3,8 @@ import Link from "next/link";
 import { requireUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { getUserPlan } from "@/lib/subscription";
-import { isFounderEmail } from "@/lib/founders";
-import { FounderBadge } from "@/components/founder-badge";
+import { gradeOf, GRADE_LABEL } from "@/lib/grades";
+import { GradeBadge } from "@/components/grade-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,13 +30,13 @@ export default async function SettingsPage() {
     getUserPlan(userId),
   ]);
   if (!user) return null;
-  const founder = isFounderEmail(user.email);
+  const grade = gradeOf(user.email);
 
   return (
     <div className="mx-auto max-w-2xl space-y-8 px-4 py-12">
       <div className="flex items-center gap-3">
         <h1 className="text-3xl font-bold">Paramètres</h1>
-        {founder && <FounderBadge />}
+        {grade && <GradeBadge grade={grade} />}
       </div>
 
       <Card>
@@ -47,10 +47,12 @@ export default async function SettingsPage() {
           <p>
             <span className="text-zinc-500">Nom :</span> {user.name ?? "—"}
           </p>
-          {founder && (
+          {grade && (
             <p>
               <span className="text-zinc-500">Grade :</span>{" "}
-              <span className="font-semibold">Fondateur — accès illimité</span>
+              <span className="font-semibold">
+                {GRADE_LABEL[grade]} — accès illimité
+              </span>
             </p>
           )}
           <p>
@@ -66,8 +68,8 @@ export default async function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             Facturation
-            {founder ? (
-              <FounderBadge />
+            {grade ? (
+              <GradeBadge grade={grade} />
             ) : (
               <Badge variant={plan === "premium" ? "default" : "secondary"}>
                 {plan === "premium" ? "Premium" : "Gratuit"}
@@ -75,17 +77,17 @@ export default async function SettingsPage() {
             )}
           </CardTitle>
           <CardDescription>
-            {founder
-              ? "Compte fondateur : accès illimité à toutes les fonctionnalités, sans abonnement."
+            {grade
+              ? `Compte ${GRADE_LABEL[grade]} : accès illimité à toutes les fonctionnalités, sans abonnement.`
               : plan === "premium"
                 ? "Gérez votre abonnement, votre moyen de paiement et vos factures — ou annulez à tout moment."
                 : "Vous êtes sur le plan gratuit."}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {founder ? (
+          {grade ? (
             <p className="text-sm text-zinc-500">
-              Aucune facturation — vous disposez d&apos;un accès fondateur.
+              Aucune facturation — vous disposez d&apos;un accès {GRADE_LABEL[grade]}.
             </p>
           ) : user.subscription ? (
             <BillingPortalButton />

@@ -4,17 +4,19 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CreditCard, LayoutDashboard, LogOut, Settings } from "lucide-react";
 import { logoutAction } from "@/server/actions";
+import { GradeBadge } from "@/components/grade-badge";
+import type { Grade } from "@/lib/grades";
 
 // Rond avec l'initiale du prénom → menu déroulant (tableau de bord,
 // abonnement, paramètres, déconnexion).
 export function UserMenu({
   name,
   email,
-  founder,
+  grade,
 }: {
   name: string;
   email: string;
-  founder: boolean;
+  grade: Grade | null;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -65,10 +67,10 @@ export function UserMenu({
               <p className="truncate text-xs text-zinc-400">{email}</p>
             </div>
           </div>
-          {founder && (
-            <span className="mx-2.5 mb-1 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-violet-500 px-2 py-0.5 text-[11px] font-semibold text-white">
-              Fondateur
-            </span>
+          {grade && (
+            <div className="mx-2.5 mb-1">
+              <GradeBadge grade={grade} />
+            </div>
           )}
 
           <div className="my-1 h-px bg-zinc-100 dark:bg-zinc-800" />
