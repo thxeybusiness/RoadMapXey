@@ -55,7 +55,7 @@ export function ItemBar({
     <div
       style={style}
       className={cn(
-        "group relative z-10 flex items-center gap-1.5 rounded-lg border px-2.5 shadow-sm transition-opacity",
+        "group relative z-10 flex items-center gap-1.5 rounded-full border px-3 shadow-sm transition-all hover:shadow-md",
         compact ? "py-1" : "py-1.5",
         COLOR_CLASSES[item.color] ?? COLOR_CLASSES.violet,
         item.status === "DONE" && "opacity-60",

@@ -15,7 +15,7 @@ export function DeleteRoadmapButton({ roadmapId }: { roadmapId: string }) {
       disabled={pending}
       aria-label="Supprimer la roadmap"
       onClick={() => {
-        if (!confirm("Supprimer cette roadmap et tous ses items ?")) return;
+        if (!confirm("Supprimer cette roadmap et toutes ses étapes ?")) return;
         startTransition(async () => {
           await deleteRoadmapAction(roadmapId);
         });
