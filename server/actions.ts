@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/session";
-import { auth, signIn, signOut } from "@/lib/auth";
+import { signIn, signOut } from "@/lib/auth";
 import {
   dayBlockSchema,
   roadmapItemSchema,
@@ -28,7 +28,6 @@ import {
   updateTestNode,
   type Objective,
 } from "@/server/testboard";
-import { updateSheetData } from "@/server/sheet";
 import {
   declineInvitation,
   inviteMember,
@@ -291,26 +290,6 @@ export async function deleteTestEdgeAction(edgeId: string): Promise<ActionResult
   const { tenantId } = await requireUser();
   try {
     await deleteTestEdge(edgeId, tenantId);
-    return { ok: true };
-  } catch (error) {
-    return toError(error);
-  }
-}
-
-// ── Feuille de calcul (snapshot Univer) ─────────────────────────────────────
-
-export async function saveSheetDataAction(
-  roadmapId: string,
-  data: unknown
-): Promise<ActionResult> {
-  // Pas de redirect ici : si la session a expiré en pleine édition, on
-  // renvoie une erreur affichable au lieu de détourner la page.
-  const session = await auth();
-  if (!session?.user?.tenantId) {
-    return { ok: false, error: "Session expirée — reconnectez-vous" };
-  }
-  try {
-    await updateSheetData(roadmapId, session.user.tenantId, data);
     return { ok: true };
   } catch (error) {
     return toError(error);

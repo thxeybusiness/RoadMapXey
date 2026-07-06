@@ -37,12 +37,6 @@ const CATEGORIES = [
     Icon: Network,
     chip: "bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300",
   },
-  {
-    type: "test2",
-    label: "Feuille de calcul",
-    Icon: Table2,
-    chip: "bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300",
-  },
 ] as const;
 
 function categoryOf(type: string): string {
@@ -65,9 +59,7 @@ export default async function DashboardPage({
 
   const totalItems = roadmaps.reduce((n, r) => n + r._count.items, 0);
   const boards = roadmaps.filter((r) => r.type === "board").length;
-  const creative = roadmaps.filter(
-    (r) => r.type === "test" || r.type === "test2"
-  ).length;
+  const creative = roadmaps.filter((r) => r.type === "test").length;
 
   const today = new Intl.DateTimeFormat("fr-FR", {
     weekday: "long",

@@ -38,6 +38,16 @@ async function main() {
     console.log(`[backfill] ${u.email} → @${username}`);
   }
   console.log(`[backfill] ${users.length} pseudo(s) attribué(s)`);
+
+  // La feuille de calcul (type « test2 ») a été retirée : on bascule les
+  // roadmaps historiques de ce type vers le tableau classique.
+  const migrated = await prisma.roadmap.updateMany({
+    where: { type: "test2" },
+    data: { type: "board" },
+  });
+  if (migrated.count > 0) {
+    console.log(`[backfill] ${migrated.count} feuille(s) de calcul → tableau`);
+  }
 }
 
 main()
