@@ -41,7 +41,7 @@ export default async function RoadmapPage({
             </Link>
           </Button>
           <h1 className="truncate text-2xl font-bold">{roadmap.title}</h1>
-          <span className="shrink-0 rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-semibold text-violet-700 dark:bg-violet-950/60 dark:text-violet-300">
+          <span className="shrink-0 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
             {typeLabel}
           </span>
         </div>

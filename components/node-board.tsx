@@ -401,9 +401,9 @@ export function NodeBoard({
                     : CARD_COLORS[node.color] ?? CARD_COLORS.violet,
                   connecting && "ring-2 ring-offset-2 dark:ring-offset-zinc-950",
                   connecting && linkSource === node.id
-                    ? "ring-violet-500"
+                    ? "ring-emerald-500"
                     : connecting
-                      ? "ring-transparent hover:ring-violet-300"
+                      ? "ring-transparent hover:ring-emerald-300"
                       : ""
                 )}
                 style={{ left: node.x, top: node.y }}
