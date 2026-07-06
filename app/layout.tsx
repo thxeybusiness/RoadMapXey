@@ -18,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className="h-full antialiased">
-      <body className="flex min-h-full flex-col bg-[#eef5ef] text-zinc-900 dark:bg-[#0a1210] dark:text-zinc-50">
+      <body className="flex min-h-full flex-col bg-[#dceee2] text-zinc-900 dark:bg-[#0a1210] dark:text-zinc-50">
         <Navbar />
         <main className="flex-1">{children}</main>
         <footer className="border-t border-emerald-100 py-6 text-center text-sm text-zinc-500 dark:border-emerald-950/60">
