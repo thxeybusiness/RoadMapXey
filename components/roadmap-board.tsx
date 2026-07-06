@@ -27,8 +27,8 @@ const MONTH_FULL = [
 ];
 
 export function RoadmapBoard({ items }: { items: RoadmapItem[] }) {
-  // Démarre sur 3 années (année précédente – courante – suivante).
-  const [scale, setScale] = useState<Scale>("year");
+  // Démarre sur l'année courante et ses 12 mois.
+  const [scale, setScale] = useState<Scale>("month");
   const [anchor, setAnchor] = useState<Date>(() => new Date());
 
   const buckets = useMemo(() => buildBuckets(scale, anchor), [scale, anchor]);
@@ -78,7 +78,6 @@ export function RoadmapBoard({ items }: { items: RoadmapItem[] }) {
 
   function zoomOut() {
     if (scale === "day" || scale === "week") setScale("month");
-    else if (scale === "month") setScale("year");
   }
 
   return (
