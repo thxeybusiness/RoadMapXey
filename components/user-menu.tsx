@@ -46,7 +46,7 @@ export function UserMenu({
         aria-label="Menu du compte"
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-sm font-semibold text-white shadow-sm ring-2 ring-transparent transition hover:ring-violet-300 focus-visible:outline-none focus-visible:ring-violet-400"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-300 text-base font-semibold text-zinc-900 transition hover:border-violet-400 hover:text-violet-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 dark:border-zinc-700 dark:text-zinc-100"
       >
         {initial}
       </button>
@@ -57,7 +57,7 @@ export function UserMenu({
           className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl border border-zinc-200 bg-white p-1.5 shadow-lg dark:border-zinc-800 dark:bg-zinc-950"
         >
           <div className="flex items-center gap-3 px-2.5 py-2">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-sm font-semibold text-white">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-300 text-sm font-semibold dark:border-zinc-700">
               {initial}
             </span>
             <div className="min-w-0">
