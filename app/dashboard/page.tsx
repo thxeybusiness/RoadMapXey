@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireUser } from "@/lib/session";
 import { getUserPlan, FREE_LIMITS } from "@/lib/subscription";
-import { isFounderEmail } from "@/lib/founders";
-import { FounderBadge } from "@/components/founder-badge";
+import { gradeOf } from "@/lib/grades";
+import { GradeBadge } from "@/components/grade-badge";
 import { listRoadmaps } from "@/server/roadmaps";
 import { RoadmapForm } from "@/components/roadmap-form";
 import { DeleteRoadmapButton } from "@/components/delete-roadmap-button";
@@ -30,7 +30,7 @@ export default async function DashboardPage({
     listRoadmaps(tenantId),
     searchParams,
   ]);
-  const founder = isFounderEmail(email);
+  const grade = gradeOf(email);
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 px-4 py-12">
@@ -46,8 +46,8 @@ export default async function DashboardPage({
           <h1 className="text-3xl font-bold">Bonjour {name || "👋"}</h1>
           <p className="text-zinc-500">Vos roadmaps produit</p>
         </div>
-        {founder ? (
-          <FounderBadge />
+        {grade ? (
+          <GradeBadge grade={grade} />
         ) : (
           <Badge variant={plan === "premium" ? "default" : "secondary"}>
             {plan === "premium" ? "Premium" : "Gratuit"}
@@ -55,7 +55,7 @@ export default async function DashboardPage({
         )}
       </div>
 
-      {!founder && plan === "free" && roadmaps.length >= FREE_LIMITS.maxRoadmaps && (
+      {!grade && plan === "free" && roadmaps.length >= FREE_LIMITS.maxRoadmaps && (
         <div className="flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
           <span>
             Limite du plan gratuit atteinte ({FREE_LIMITS.maxRoadmaps} roadmap).

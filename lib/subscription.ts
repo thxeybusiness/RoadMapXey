@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { isFounderEmail } from "@/lib/founders";
+import { hasUnlimitedAccess } from "@/lib/grades";
 import type { Plan } from "@/types";
 
 // Limites du plan gratuit — l'accès premium est TOUJOURS vérifié côté
@@ -15,8 +15,8 @@ export async function getUserPlan(userId: string): Promise<Plan> {
     select: { email: true, subscription: true },
   });
 
-  // Les fondateurs ont un accès illimité, indépendamment de tout abonnement.
-  if (isFounderEmail(user?.email)) return "premium";
+  // Grades à accès illimité (fondateur, VIP…), indépendamment de tout abonnement.
+  if (hasUnlimitedAccess(user?.email)) return "premium";
 
   const subscription = user?.subscription;
   if (
