@@ -24,6 +24,10 @@ export default async function RoadmapPage({
   if (!roadmap) notFound();
 
   const typeLabel = roadmap.type === "test" ? "Canvas" : "Tableau";
+  const typeBadgeClass =
+    roadmap.type === "test"
+      ? "bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300"
+      : "bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -35,7 +39,9 @@ export default async function RoadmapPage({
             </Link>
           </Button>
           <h1 className="truncate text-2xl font-bold">{roadmap.title}</h1>
-          <span className="shrink-0 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+          <span
+            className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${typeBadgeClass}`}
+          >
             {typeLabel}
           </span>
         </div>
