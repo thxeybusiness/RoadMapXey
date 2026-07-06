@@ -4,8 +4,8 @@ import { Navbar } from "@/components/navbar";
 
 export const metadata: Metadata = {
   title: {
-    default: "RoadMapXey — Roadmaps produit partagées",
-    template: "%s · RoadMapXey",
+    default: "RoadMap Business — Roadmaps produit partagées",
+    template: "%s · RoadMap Business",
   },
   description:
     "Créez, priorisez et partagez vos roadmaps produit avec votre équipe.",
@@ -22,7 +22,7 @@ export default function RootLayout({
         <Navbar />
         <main className="flex-1">{children}</main>
         <footer className="border-t border-zinc-200 py-6 text-center text-sm text-zinc-500 dark:border-zinc-800">
-          © {new Date().getFullYear()} RoadMapXey
+          © {new Date().getFullYear()} RoadMap Business
         </footer>
       </body>
     </html>

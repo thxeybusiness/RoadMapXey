@@ -1,4 +1,4 @@
-# RoadMapXey
+# RoadMap Business
 
 SaaS de roadmaps produit — Next.js 16 (App Router), TypeScript, Tailwind CSS 4, Prisma + PostgreSQL, NextAuth, Stripe, Resend, Sentry.
 

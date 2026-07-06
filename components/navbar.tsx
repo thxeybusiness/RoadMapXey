@@ -12,7 +12,7 @@ export async function Navbar() {
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-bold">
           <Map className="h-5 w-5" />
-          RoadMapXey
+          RoadMap Business
         </Link>
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" size="sm">

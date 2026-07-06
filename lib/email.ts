@@ -5,7 +5,7 @@ import { getBaseUrl } from "@/lib/env";
 // Sans RESEND_API_KEY, on log au lieu d'envoyer — l'app ne casse jamais
 // à cause d'un email (les erreurs d'envoi sont catchées et loggées).
 
-const from = process.env.EMAIL_FROM ?? "RoadMapXey <onboarding@resend.dev>";
+const from = process.env.EMAIL_FROM ?? "RoadMap Business <onboarding@resend.dev>";
 
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
@@ -28,9 +28,9 @@ async function send(to: string, subject: string, html: string) {
 export async function sendWelcomeEmail(to: string, name: string) {
   await send(
     to,
-    "Bienvenue sur RoadMapXey 🎉",
+    "Bienvenue sur RoadMap Business 🎉",
     `<h1>Bienvenue ${name} !</h1>
-     <p>Votre compte RoadMapXey est prêt. Créez votre première roadmap dès maintenant :</p>
+     <p>Votre compte RoadMap Business est prêt. Créez votre première roadmap dès maintenant :</p>
      <p><a href="${getBaseUrl()}/dashboard">Accéder au dashboard</a></p>`
   );
 }

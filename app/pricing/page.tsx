@@ -32,7 +32,7 @@ export default function PricingPage() {
         <Card>
           <CardHeader>
             <CardTitle>Gratuit</CardTitle>
-            <CardDescription>Pour découvrir RoadMapXey</CardDescription>
+            <CardDescription>Pour découvrir RoadMap Business</CardDescription>
             <p className="text-4xl font-bold">
               0 € <span className="text-base font-normal text-zinc-500">/mois</span>
             </p>
