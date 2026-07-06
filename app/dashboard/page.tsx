@@ -182,7 +182,8 @@ export default async function DashboardPage({
               <ArrowRight className="mt-4 hidden h-5 w-5 animate-pulse text-emerald-500 lg:block" />
             </div>
           ) : (
-            (() => {
+            <div className="grid items-start gap-5 sm:grid-cols-2">
+              {(() => {
               let idx = 0;
               return CATEGORIES.map((cat) => {
                 const list = roadmaps.filter(
@@ -204,7 +205,7 @@ export default async function DashboardPage({
                         {list.length}
                       </span>
                     </div>
-                    <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(230px,1fr))]">
+                    <div className="space-y-4">
                       {list.map((roadmap) => (
                         <RoadmapCard
                           key={roadmap.id}
@@ -220,7 +221,8 @@ export default async function DashboardPage({
                   </section>
                 );
               });
-            })()
+            })()}
+            </div>
           )}
         </div>
 
