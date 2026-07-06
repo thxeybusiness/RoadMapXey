@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { ArrowUpRight, Map, Network, Table2, ListChecks } from "lucide-react";
+import { ArrowUpRight, Map, Network, ListChecks } from "lucide-react";
 import { DeleteRoadmapButton } from "@/components/delete-roadmap-button";
 
-type RoadmapType = "board" | "test" | "test2" | string;
+type RoadmapType = "board" | "test" | string;
 
 const META: Record<
   string,
@@ -21,13 +21,6 @@ const META: Record<
     chip: "bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300",
     bar: "from-violet-400 to-fuchsia-500",
     glow: "hover:shadow-violet-500/25",
-  },
-  test2: {
-    label: "Feuille de calcul",
-    Icon: Table2,
-    chip: "bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300",
-    bar: "from-sky-400 to-cyan-500",
-    glow: "hover:shadow-sky-500/25",
   },
 };
 

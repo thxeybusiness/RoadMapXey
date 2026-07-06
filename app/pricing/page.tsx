@@ -48,7 +48,7 @@ export default function PricingPage() {
       features: [
         "Roadmaps illimitées",
         "Étapes illimitées",
-        "Les 3 formats : Tableau, Canvas & Feuille de calcul",
+        "Les 2 formats : Tableau & Canvas",
         "Planning journalier 30 min",
         "Support par email",
       ],

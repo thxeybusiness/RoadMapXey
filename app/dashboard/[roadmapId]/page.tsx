@@ -6,7 +6,6 @@ import { requireUser } from "@/lib/session";
 import { getRoadmap } from "@/server/roadmaps";
 import { RoadmapBoard } from "@/components/roadmap-board";
 import { NodeBoard } from "@/components/node-board";
-import { ExcelBoardLazy } from "@/components/excel-board-lazy";
 import { ItemForm } from "@/components/item-form";
 import { Button } from "@/components/ui/button";
 
@@ -24,12 +23,7 @@ export default async function RoadmapPage({
   const roadmap = await getRoadmap(roadmapId, tenantId);
   if (!roadmap) notFound();
 
-  const typeLabel =
-    roadmap.type === "test"
-      ? "Canvas"
-      : roadmap.type === "test2"
-        ? "Feuille de calcul"
-        : "Tableau";
+  const typeLabel = roadmap.type === "test" ? "Canvas" : "Tableau";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -70,9 +64,7 @@ export default async function RoadmapPage({
 
       {/* Espace généreux entre l'en-tête et le contenu de la roadmap */}
       <div className="mt-12 space-y-6">
-        {roadmap.type === "test2" ? (
-          <ExcelBoardLazy roadmapId={roadmap.id} initialData={roadmap.sheetData} />
-        ) : roadmap.type === "test" ? (
+        {roadmap.type === "test" ? (
           <NodeBoard
             roadmapId={roadmap.id}
             initialNodes={roadmap.testNodes.map((n) => ({
