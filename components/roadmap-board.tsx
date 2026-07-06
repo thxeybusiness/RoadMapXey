@@ -4,9 +4,10 @@ import { useMemo, useState } from "react";
 import type { RoadmapItem } from "@prisma/client";
 import {
   buildBuckets,
+  dateCoord,
   isPlanned,
+  itemSpanPercent,
   itemStart,
-  placeItem,
   SCALE_COL_WIDTH,
   SCALES,
   type Scale,
@@ -14,13 +15,15 @@ import {
 import { ItemBar } from "@/components/item-bar";
 import { cn } from "@/lib/utils";
 
+const ROW_HEIGHT = 40; // px, une ligne par étape
+
 export function RoadmapBoard({ items }: { items: RoadmapItem[] }) {
   const [scale, setScale] = useState<Scale>("month");
 
   const buckets = useMemo(() => buildBuckets(items, scale), [items, scale]);
   const colWidth = SCALE_COL_WIDTH[scale];
+  const n = buckets.length;
 
-  // Étapes planifiées (avec date) triées par date de début, puis non datées.
   const planned = useMemo(
     () =>
       items
@@ -33,11 +36,17 @@ export function RoadmapBoard({ items }: { items: RoadmapItem[] }) {
     [items]
   );
   const unplanned = useMemo(() => items.filter((i) => !isPlanned(i)), [items]);
-  const todayIdx = buckets.findIndex((b) => b.isNow);
+
+  const todayPct = useMemo(() => {
+    const now = new Date();
+    if (now < buckets[0].start || now >= buckets[n - 1].end) return null;
+    return (dateCoord(now, buckets) / n) * 100;
+  }, [buckets, n]);
 
   const gridTemplate = {
-    gridTemplateColumns: `repeat(${buckets.length}, minmax(${colWidth}px, 1fr))`,
+    gridTemplateColumns: `repeat(${n}, minmax(${colWidth}px, 1fr))`,
   };
+  const bodyHeight = Math.max(planned.length, 1) * ROW_HEIGHT;
 
   return (
     <div className="space-y-4">
@@ -67,13 +76,13 @@ export function RoadmapBoard({ items }: { items: RoadmapItem[] }) {
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <div className="relative" style={{ minWidth: buckets.length * colWidth }}>
-          {/* Ligne verticale « aujourd'hui » */}
-          {todayIdx >= 0 && (
+        <div className="relative" style={{ minWidth: n * colWidth }}>
+          {/* Ligne verticale « aujourd'hui » (proportionnelle) */}
+          {todayPct !== null && (
             <div
               aria-hidden
-              className="pointer-events-none absolute bottom-0 top-12 z-20 w-px bg-violet-400/70 dark:bg-violet-500/60"
-              style={{ left: `calc(100% * ${todayIdx} / ${buckets.length})` }}
+              className="pointer-events-none absolute bottom-0 top-12 z-20 w-px bg-violet-500/70"
+              style={{ left: `${todayPct}%` }}
             >
               <span className="absolute -left-1.5 -top-1.5 h-3 w-3 rounded-full bg-violet-500 ring-2 ring-white dark:ring-zinc-950" />
             </div>
@@ -88,8 +97,8 @@ export function RoadmapBoard({ items }: { items: RoadmapItem[] }) {
               <div
                 key={b.key}
                 className={cn(
-                  "border-l border-zinc-100 px-1 py-2 text-center first:border-l-0 dark:border-zinc-800/60",
-                  b.isWeekend && "bg-zinc-50 dark:bg-zinc-900/40",
+                  "border-l border-zinc-200 px-1 py-2 text-center first:border-l-0 dark:border-zinc-800",
+                  b.isWeekend && "bg-zinc-100/70 dark:bg-zinc-900/50",
                   b.isNow
                     ? "font-semibold text-violet-600 dark:text-violet-300"
                     : "text-zinc-500"
@@ -105,40 +114,54 @@ export function RoadmapBoard({ items }: { items: RoadmapItem[] }) {
             ))}
           </div>
 
-          {/* Corps : une ligne par étape planifiée */}
+          {/* Corps */}
           {planned.length === 0 ? (
             <p className="px-5 py-12 text-center text-sm text-zinc-400">
               Planifiez votre première étape avec la barre ci-dessous — elle
               apparaîtra ici sous forme de pastille colorée sur la timeline.
             </p>
           ) : (
-            <div className="grid gap-y-1.5 py-3" style={gridTemplate}>
-              {/* Guides verticaux */}
+            <div className="relative" style={{ height: bodyHeight }}>
+              {/* Guides verticaux + week-ends, alignés sur les colonnes */}
               {buckets.map((b, i) => (
                 <div
                   key={`guide-${b.key}`}
                   aria-hidden
                   className={cn(
-                    "pointer-events-none border-l border-zinc-100 first:border-l-0 dark:border-zinc-800/60",
-                    b.isWeekend && "bg-zinc-50/70 dark:bg-zinc-900/30"
+                    "absolute bottom-0 top-0",
+                    i > 0 && "border-l border-zinc-100 dark:border-zinc-800/70",
+                    b.isWeekend && "bg-zinc-50 dark:bg-zinc-900/30"
                   )}
-                  style={{ gridColumn: i + 1, gridRow: `1 / span ${planned.length}` }}
+                  style={{ left: `${(i / n) * 100}%`, width: `${100 / n}%` }}
                 />
               ))}
-              {/* Barres */}
+              {/* Séparateurs de lignes */}
+              {planned.slice(1).map((item, i) => (
+                <div
+                  key={`sep-${item.id}`}
+                  aria-hidden
+                  className="absolute inset-x-0 border-t border-zinc-100/70 dark:border-zinc-800/40"
+                  style={{ top: (i + 1) * ROW_HEIGHT }}
+                />
+              ))}
+              {/* Barres proportionnelles */}
               {planned.map((item, row) => {
-                const placement = placeItem(item, buckets);
-                if (!placement) return null;
+                const span = itemSpanPercent(item, buckets);
+                if (!span) return null;
                 return (
                   <div
                     key={item.id}
-                    className="px-1"
+                    className="absolute flex items-center"
                     style={{
-                      gridColumn: `${placement.startIdx + 1} / ${placement.endIdx + 2}`,
-                      gridRow: row + 1,
+                      left: `${span.leftPct}%`,
+                      width: `${span.widthPct}%`,
+                      minWidth: 26,
+                      top: row * ROW_HEIGHT,
+                      height: ROW_HEIGHT,
+                      paddingRight: 4,
                     }}
                   >
-                    <ItemBar item={item} />
+                    <ItemBar item={item} fill />
                   </div>
                 );
               })}
@@ -155,7 +178,7 @@ export function RoadmapBoard({ items }: { items: RoadmapItem[] }) {
           </h2>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {unplanned.map((item) => (
-              <ItemBar key={item.id} item={item} compact />
+              <ItemBar key={item.id} item={item} />
             ))}
           </div>
         </div>
