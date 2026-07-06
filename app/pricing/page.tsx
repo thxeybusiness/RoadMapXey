@@ -7,11 +7,17 @@ import { FREE_LIMITS } from "@/lib/subscription";
 
 export const metadata: Metadata = { title: "Forfaits" };
 
+// Identifiants de prix Stripe (mode Test). Ce ne sont pas des secrets
+// (ils transitent de toute façon côté client). Une variable d'environnement
+// du même nom, si définie, a la priorité — pratique pour basculer en Live.
+const DEFAULT_PRICE_PRO = "price_1TqIHeRwEaCwXVSNTqsOwlIG"; // 4 €/mois
+const DEFAULT_PRICE_BUSINESS = "price_1TqIIDRwEaCwXVSNkzdwZW7I"; // 9 €/mois
+
 export default function PricingPage() {
-  // Les priceId viennent du dashboard Stripe, exposés via des variables
-  // d'env publiques — jamais de montant codé en dur.
-  const proPriceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO;
-  const businessPriceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_BUSINESS;
+  const proPriceId =
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO ?? DEFAULT_PRICE_PRO;
+  const businessPriceId =
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_BUSINESS ?? DEFAULT_PRICE_BUSINESS;
 
   const plans = [
     {
