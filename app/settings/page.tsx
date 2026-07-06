@@ -3,6 +3,8 @@ import Link from "next/link";
 import { requireUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { getUserPlan } from "@/lib/subscription";
+import { isFounderEmail } from "@/lib/founders";
+import { FounderBadge } from "@/components/founder-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,10 +30,14 @@ export default async function SettingsPage() {
     getUserPlan(userId),
   ]);
   if (!user) return null;
+  const founder = isFounderEmail(user.email);
 
   return (
     <div className="mx-auto max-w-2xl space-y-8 px-4 py-12">
-      <h1 className="text-3xl font-bold">Paramètres</h1>
+      <div className="flex items-center gap-3">
+        <h1 className="text-3xl font-bold">Paramètres</h1>
+        {founder && <FounderBadge />}
+      </div>
 
       <Card>
         <CardHeader>
@@ -41,6 +47,12 @@ export default async function SettingsPage() {
           <p>
             <span className="text-zinc-500">Nom :</span> {user.name ?? "—"}
           </p>
+          {founder && (
+            <p>
+              <span className="text-zinc-500">Grade :</span>{" "}
+              <span className="font-semibold">Fondateur — accès illimité</span>
+            </p>
+          )}
           <p>
             <span className="text-zinc-500">Email :</span> {user.email}
           </p>
@@ -54,18 +66,28 @@ export default async function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             Facturation
-            <Badge variant={plan === "premium" ? "default" : "secondary"}>
-              {plan === "premium" ? "Premium" : "Gratuit"}
-            </Badge>
+            {founder ? (
+              <FounderBadge />
+            ) : (
+              <Badge variant={plan === "premium" ? "default" : "secondary"}>
+                {plan === "premium" ? "Premium" : "Gratuit"}
+              </Badge>
+            )}
           </CardTitle>
           <CardDescription>
-            {plan === "premium"
-              ? "Gérez votre abonnement, votre moyen de paiement et vos factures — ou annulez à tout moment."
-              : "Vous êtes sur le plan gratuit."}
+            {founder
+              ? "Compte fondateur : accès illimité à toutes les fonctionnalités, sans abonnement."
+              : plan === "premium"
+                ? "Gérez votre abonnement, votre moyen de paiement et vos factures — ou annulez à tout moment."
+                : "Vous êtes sur le plan gratuit."}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {user.subscription ? (
+          {founder ? (
+            <p className="text-sm text-zinc-500">
+              Aucune facturation — vous disposez d&apos;un accès fondateur.
+            </p>
+          ) : user.subscription ? (
             <BillingPortalButton />
           ) : (
             <Button asChild>
