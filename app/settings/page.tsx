@@ -9,6 +9,7 @@ import { ensureUsername } from "@/server/account";
 import { GradeBadge } from "@/components/grade-badge";
 import { TeamSection } from "@/components/team-section";
 import { UsernameCard } from "@/components/username-card";
+import { FounderAdmin } from "@/components/founder-admin";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -131,6 +132,8 @@ export default async function SettingsPage() {
           canInvite={canInvite}
         />
       )}
+
+      {grade === "founder" && <FounderAdmin />}
 
       <Card className="border-red-300 dark:border-red-900">
         <CardHeader>
