@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
+import { PwaRegister } from "@/components/pwa-register";
 
 export const metadata: Metadata = {
   title: {
@@ -9,6 +10,15 @@ export const metadata: Metadata = {
   },
   description:
     "Créez, priorisez et partagez vos roadmaps produit avec votre équipe.",
+  appleWebApp: {
+    capable: true,
+    title: "RoadMap Business",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#059669",
 };
 
 export default function RootLayout({
@@ -24,6 +34,7 @@ export default function RootLayout({
         <footer className="border-t border-emerald-100 py-6 text-center text-sm text-zinc-500 dark:border-emerald-950/60">
           © {new Date().getFullYear()} RoadMap Business
         </footer>
+        <PwaRegister />
       </body>
     </html>
   );
