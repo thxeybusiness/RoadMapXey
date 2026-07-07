@@ -1,4 +1,6 @@
+import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { FREE_LIMITS, isPremium } from "@/lib/subscription";
 import type {
   DayBlockInput,
@@ -101,26 +103,95 @@ export async function updateNoteContent(
   });
 }
 
-const NODE_COLORS = ["violet", "blue", "emerald", "amber", "rose", "cyan"];
+const NODE_COLORS = ["violet", "blue", "amber", "rose", "cyan", "emerald"];
 
-// Découpe le texte d'une note en idées : une ligne = un bloc. On retire les
-// marqueurs Markdown courants (titres #, puces -, numéros 1., cases [ ]).
-function parseNoteToBlocks(content: string): string[] {
-  return content
-    .split(/\r?\n/)
-    .map((line) =>
-      line
-        .replace(/^\s*(#{1,6}\s+|[-*+•]\s+|\d+[.)]\s+)/, "")
-        .replace(/^\s*\[[ xX]\]\s*/, "")
-        .trim()
-    )
-    .filter((line) => line.length > 0)
-    .slice(0, 60)
-    .map((line) => line.slice(0, 200));
+// ── Analyse structurée d'une note ────────────────────────────────────────────
+// Objectif : comprendre la note, pas la recopier ligne à ligne.
+// - Le premier titre `#` devient le SUJET (bloc central du Canvas).
+// - Chaque titre suivant (`#`, `##`, …) devient un THÈME (un bloc).
+// - Les puces / numéros / cases sous un thème deviennent ses OBJECTIFS
+//   cochables ([x] = déjà coché).
+// - Sans titres : chaque ligne de 1er niveau devient un bloc, ses sous-puces
+//   indentées deviennent ses objectifs ; les étapes numérotées (1. 2. 3.)
+//   sont reliées entre elles en séquence.
+// - Tous les thèmes sont reliés au sujet central (carte mentale).
+
+type ParsedObjective = { label: string; done: boolean };
+type ParsedBlock = {
+  title: string;
+  objectives: ParsedObjective[];
+  numbered: boolean;
+};
+
+function cleanText(s: string): string {
+  return s.replace(/\*\*|__|`/g, "").trim().slice(0, 200);
 }
 
-// Convertit une note en un nouveau Canvas : chaque idée devient un bloc,
-// disposé en grille, prêt à être relié et réorganisé. La note est conservée.
+function parseNoteStructure(content: string): {
+  subject: string | null;
+  blocks: ParsedBlock[];
+} {
+  const lines = content.split(/\r?\n/);
+  const hasHeadings = lines.some((l) => /^\s*#{1,6}\s+\S/.test(l));
+  let subject: string | null = null;
+  const blocks: ParsedBlock[] = [];
+  let current: ParsedBlock | null = null;
+
+  const flush = () => {
+    if (current) blocks.push(current);
+    current = null;
+  };
+
+  for (const raw of lines) {
+    if (!raw.trim()) continue;
+
+    const heading = raw.match(/^\s*#{1,6}\s+(.+)$/);
+    if (heading) {
+      const text = cleanText(heading[1]);
+      if (!text) continue;
+      if (subject === null && blocks.length === 0 && current === null) {
+        subject = text; // premier titre = sujet central
+      } else {
+        flush();
+        current = { title: text, objectives: [], numbered: false };
+      }
+      continue;
+    }
+
+    const checkbox = raw.match(/^(\s*)(?:[-*+•]\s*)?\[([ xX])\]\s+(.+)$/);
+    const numbered = checkbox ? null : raw.match(/^(\s*)\d+[.)]\s+(.+)$/);
+    const bullet = checkbox || numbered ? null : raw.match(/^(\s*)[-*+•]\s+(.+)$/);
+    const matched = checkbox ?? numbered ?? bullet;
+    const indent = matched ? matched[1].length : (raw.match(/^\s*/)?.[0].length ?? 0);
+    const text = cleanText(checkbox ? checkbox[3] : matched ? matched[2] : raw);
+    if (!text) continue;
+    const done = checkbox ? checkbox[2].toLowerCase() === "x" : false;
+
+    if (hasHeadings) {
+      // Mode « titres » : le contenu appartient au thème courant.
+      if (current) current.objectives.push({ label: text, done });
+      else blocks.push({ title: text, objectives: [], numbered: !!numbered });
+    } else if (indent >= 2 && current) {
+      // Mode « liste » : ligne indentée = objectif du bloc précédent.
+      current.objectives.push({ label: text, done });
+    } else {
+      flush();
+      current = { title: text, objectives: [], numbered: !!numbered };
+    }
+  }
+  flush();
+
+  return {
+    subject,
+    blocks: blocks
+      .slice(0, 30)
+      .map((b) => ({ ...b, objectives: b.objectives.slice(0, 30) })),
+  };
+}
+
+// Convertit une note en un nouveau Canvas structuré : sujet au centre,
+// thèmes autour (reliés au sujet), objectifs cochables dans chaque bloc,
+// étapes numérotées chaînées entre elles. La note d'origine est conservée.
 export async function convertNoteToCanvas(
   noteRoadmapId: string,
   userId: string,
@@ -132,9 +203,11 @@ export async function convertNoteToCanvas(
   });
   if (!note) throw new Error("Note introuvable");
 
-  const blocks = parseNoteToBlocks(note.noteContent ?? "");
+  const { subject, blocks } = parseNoteStructure(note.noteContent ?? "");
   if (blocks.length === 0) {
-    throw new Error("La note est vide — écrivez quelques idées avant de convertir.");
+    throw new Error(
+      "La note ne contient pas encore d'idées à structurer — listez des points (- idée) ou des thèmes (# Titre) avant de convertir."
+    );
   }
 
   // Même limite d'abonnement que la création classique (une nouvelle roadmap).
@@ -157,17 +230,70 @@ export async function convertNoteToCanvas(
     },
   });
 
-  const COLS = 4;
-  const GAP_X = 260;
-  const GAP_Y = 150;
-  await prisma.testNode.createMany({
-    data: blocks.map((title, i) => ({
+  // Disposition : sujet au centre, thèmes en cercle autour (carte mentale) ;
+  // au-delà de 10 thèmes, grille avec le sujet en tête.
+  const n = blocks.length;
+  const cx = 720;
+  const cy = 470;
+  const radial = n <= 10;
+  const radius = n <= 4 ? 300 : n <= 7 ? 390 : 470;
+  const positions = blocks.map((_, i) => {
+    if (radial) {
+      const angle = -Math.PI / 2 + (i * 2 * Math.PI) / n;
+      return {
+        x: Math.max(40, Math.round(cx + radius * Math.cos(angle) - 110)),
+        y: Math.max(40, Math.round(cy + radius * Math.sin(angle) - 50)),
+      };
+    }
+    return { x: 60 + (i % 4) * 300, y: 340 + Math.floor(i / 4) * 240 };
+  });
+  const centerPos = radial ? { x: cx - 110, y: cy - 50 } : { x: 480, y: 60 };
+
+  const toObjectives = (list: ParsedObjective[]) =>
+    list.map((o) => ({
+      id: randomUUID(),
+      label: o.label.slice(0, 300),
+      done: o.done,
+    })) as unknown as Prisma.InputJsonValue;
+
+  // Bloc central = sujet (premier titre de la note, sinon titre de la note).
+  const center = await prisma.testNode.create({
+    data: {
       roadmapId: canvas.id,
-      title,
-      x: 40 + (i % COLS) * GAP_X,
-      y: 40 + Math.floor(i / COLS) * GAP_Y,
-      color: NODE_COLORS[i % NODE_COLORS.length],
-    })),
+      title: (subject ?? note.title).slice(0, 200),
+      x: centerPos.x,
+      y: centerPos.y,
+      color: "emerald",
+    },
+  });
+
+  const ids: string[] = [];
+  for (let i = 0; i < blocks.length; i++) {
+    const node = await prisma.testNode.create({
+      data: {
+        roadmapId: canvas.id,
+        title: blocks[i].title,
+        x: positions[i].x,
+        y: positions[i].y,
+        color: NODE_COLORS[i % NODE_COLORS.length],
+        objectives: toObjectives(blocks[i].objectives),
+      },
+    });
+    ids.push(node.id);
+  }
+
+  // Liens : les étapes numérotées se chaînent entre elles (1 → 2 → 3…) ;
+  // tout le reste (et la première étape d'une chaîne) part du sujet central.
+  const edges: { sourceId: string; targetId: string }[] = [];
+  for (let i = 0; i < blocks.length; i++) {
+    if (blocks[i].numbered && i > 0 && blocks[i - 1].numbered) {
+      edges.push({ sourceId: ids[i - 1], targetId: ids[i] });
+    } else {
+      edges.push({ sourceId: center.id, targetId: ids[i] });
+    }
+  }
+  await prisma.testEdge.createMany({
+    data: edges.map((e) => ({ roadmapId: canvas.id, ...e })),
   });
 
   return canvas.id;
