@@ -127,6 +127,39 @@ function cleanText(s: string): string {
   return s.replace(/\*\*|__|`/g, "").trim().slice(0, 200);
 }
 
+// Structure « en ligne » : « Titre : élément / élément / élément » devient un
+// bloc « Titre » avec chaque élément en objectif. Séparateurs reconnus après
+// les deux-points : / ; | · — et sans deux-points, une ligne « a / b / c »
+// donne un bloc « a » avec b et c en objectifs.
+const INLINE_SEP = /\s*[/;|·]\s*/;
+
+function explodeInline(text: string): {
+  title: string;
+  objectives: ParsedObjective[];
+} {
+  const colon = text.match(/^(.{2,120}?)\s*:\s+(.+)$/);
+  if (colon) {
+    const parts = colon[2]
+      .split(INLINE_SEP)
+      .map((s) => cleanText(s))
+      .filter(Boolean);
+    if (parts.length > 0) {
+      return {
+        title: cleanText(colon[1]),
+        objectives: parts.map((label) => ({ label, done: false })),
+      };
+    }
+  }
+  const parts = text.split(INLINE_SEP).map((s) => cleanText(s)).filter(Boolean);
+  if (parts.length >= 3) {
+    return {
+      title: parts[0],
+      objectives: parts.slice(1).map((label) => ({ label, done: false })),
+    };
+  }
+  return { title: cleanText(text), objectives: [] };
+}
+
 function parseNoteStructure(content: string): {
   subject: string | null;
   blocks: ParsedBlock[];
@@ -147,13 +180,18 @@ function parseNoteStructure(content: string): {
 
     const heading = raw.match(/^\s*#{1,6}\s+(.+)$/);
     if (heading) {
-      const text = cleanText(heading[1]);
-      if (!text) continue;
-      if (subject === null && blocks.length === 0 && current === null) {
-        subject = text; // premier titre = sujet central
+      const ex = explodeInline(cleanText(heading[1]));
+      if (!ex.title) continue;
+      if (
+        subject === null &&
+        blocks.length === 0 &&
+        current === null &&
+        ex.objectives.length === 0
+      ) {
+        subject = ex.title; // premier titre « simple » = sujet central
       } else {
         flush();
-        current = { title: text, objectives: [], numbered: false };
+        current = { title: ex.title, objectives: [...ex.objectives], numbered: false };
       }
       continue;
     }
@@ -170,13 +208,19 @@ function parseNoteStructure(content: string): {
     if (hasHeadings) {
       // Mode « titres » : le contenu appartient au thème courant.
       if (current) current.objectives.push({ label: text, done });
-      else blocks.push({ title: text, objectives: [], numbered: !!numbered });
+      else {
+        const ex = explodeInline(text);
+        blocks.push({ title: ex.title, objectives: ex.objectives, numbered: !!numbered });
+      }
     } else if (indent >= 2 && current) {
       // Mode « liste » : ligne indentée = objectif du bloc précédent.
       current.objectives.push({ label: text, done });
     } else {
+      // Mode « liste » (1er niveau) : une ligne « Titre : a / b / c » (ou
+      // « a / b / c ») devient un bloc titré avec ses éléments en objectifs.
       flush();
-      current = { title: text, objectives: [], numbered: !!numbered };
+      const ex = explodeInline(text);
+      current = { title: ex.title, objectives: ex.objectives, numbered: !!numbered };
     }
   }
   flush();
@@ -230,25 +274,6 @@ export async function convertNoteToCanvas(
     },
   });
 
-  // Disposition : sujet au centre, thèmes en cercle autour (carte mentale) ;
-  // au-delà de 10 thèmes, grille avec le sujet en tête.
-  const n = blocks.length;
-  const cx = 720;
-  const cy = 470;
-  const radial = n <= 10;
-  const radius = n <= 4 ? 300 : n <= 7 ? 390 : 470;
-  const positions = blocks.map((_, i) => {
-    if (radial) {
-      const angle = -Math.PI / 2 + (i * 2 * Math.PI) / n;
-      return {
-        x: Math.max(40, Math.round(cx + radius * Math.cos(angle) - 110)),
-        y: Math.max(40, Math.round(cy + radius * Math.sin(angle) - 50)),
-      };
-    }
-    return { x: 60 + (i % 4) * 300, y: 340 + Math.floor(i / 4) * 240 };
-  });
-  const centerPos = radial ? { x: cx - 110, y: cy - 50 } : { x: 480, y: 60 };
-
   const toObjectives = (list: ParsedObjective[]) =>
     list.map((o) => ({
       id: randomUUID(),
@@ -256,16 +281,41 @@ export async function convertNoteToCanvas(
       done: o.done,
     })) as unknown as Prisma.InputJsonValue;
 
-  // Bloc central = sujet (premier titre de la note, sinon titre de la note).
-  const center = await prisma.testNode.create({
-    data: {
-      roadmapId: canvas.id,
-      title: (subject ?? note.title).slice(0, 200),
-      x: centerPos.x,
-      y: centerPos.y,
-      color: "emerald",
-    },
-  });
+  // Un bloc central n'existe QUE s'il y a un vrai sujet (« # Titre » seul).
+  // Sinon on ne relie rien artificiellement — juste une grille de blocs.
+  const n = blocks.length;
+  const hasCenter = subject !== null && n > 1;
+
+  let center: { id: string } | null = null;
+  const positions: { x: number; y: number }[] = [];
+
+  if (hasCenter) {
+    // Carte mentale : sujet au centre, thèmes en cercle autour.
+    const cx = 720;
+    const cy = 470;
+    const radius = n <= 4 ? 300 : n <= 7 ? 390 : 470;
+    for (let i = 0; i < n; i++) {
+      const angle = -Math.PI / 2 + (i * 2 * Math.PI) / n;
+      positions.push({
+        x: Math.max(40, Math.round(cx + radius * Math.cos(angle) - 110)),
+        y: Math.max(40, Math.round(cy + radius * Math.sin(angle) - 50)),
+      });
+    }
+    center = await prisma.testNode.create({
+      data: {
+        roadmapId: canvas.id,
+        title: subject!.slice(0, 200),
+        x: cx - 110,
+        y: cy - 50,
+        color: "emerald",
+      },
+    });
+  } else {
+    // Grille simple (blocs indépendants).
+    for (let i = 0; i < n; i++) {
+      positions.push({ x: 60 + (i % 3) * 320, y: 60 + Math.floor(i / 3) * 260 });
+    }
+  }
 
   const ids: string[] = [];
   for (let i = 0; i < blocks.length; i++) {
@@ -282,19 +332,23 @@ export async function convertNoteToCanvas(
     ids.push(node.id);
   }
 
-  // Liens : les étapes numérotées se chaînent entre elles (1 → 2 → 3…) ;
-  // tout le reste (et la première étape d'une chaîne) part du sujet central.
+  // Liens (uniquement quand ils ont un sens) :
+  // - étapes numérotées : chaînées entre elles (1 → 2 → 3…) ;
+  // - s'il y a un sujet central : chaque bloc (hors suite de chaîne) y est relié.
   const edges: { sourceId: string; targetId: string }[] = [];
   for (let i = 0; i < blocks.length; i++) {
-    if (blocks[i].numbered && i > 0 && blocks[i - 1].numbered) {
+    const continuesChain = blocks[i].numbered && i > 0 && blocks[i - 1].numbered;
+    if (continuesChain) {
       edges.push({ sourceId: ids[i - 1], targetId: ids[i] });
-    } else {
+    } else if (center) {
       edges.push({ sourceId: center.id, targetId: ids[i] });
     }
   }
-  await prisma.testEdge.createMany({
-    data: edges.map((e) => ({ roadmapId: canvas.id, ...e })),
-  });
+  if (edges.length > 0) {
+    await prisma.testEdge.createMany({
+      data: edges.map((e) => ({ roadmapId: canvas.id, ...e })),
+    });
+  }
 
   return canvas.id;
 }
