@@ -42,7 +42,7 @@ export default async function PricingPage() {
 
   // CTA d'un forfait payant selon la situation : déjà souscrit, changement
   // au prorata, ou première souscription.
-  function paidCta(priceId: string, label: string) {
+  function paidCta(priceId: string, label: string, monthlyLabel: string) {
     if (currentPriceId === priceId) {
       return (
         <Button variant="outline" className="w-full" disabled>
@@ -51,7 +51,11 @@ export default async function PricingPage() {
       );
     }
     return (
-      <CheckoutButton priceId={priceId}>
+      <CheckoutButton
+        priceId={priceId}
+        isChange={hasSub}
+        monthlyLabel={monthlyLabel}
+      >
         {hasSub ? "Changer pour ce forfait" : label}
       </CheckoutButton>
     );
@@ -90,7 +94,7 @@ export default async function PricingPage() {
       ],
       bar: "from-emerald-400 to-teal-500",
       check: "text-emerald-600",
-      cta: paidCta(proPriceId, "Passer en Pro"),
+      cta: paidCta(proPriceId, "Passer en Pro", "4 €"),
       highlighted: true,
     },
     {
@@ -106,7 +110,7 @@ export default async function PricingPage() {
       ],
       bar: "from-emerald-600 to-green-800",
       check: "text-emerald-700",
-      cta: paidCta(businessPriceId, "Passer en Business"),
+      cta: paidCta(businessPriceId, "Passer en Business", "9 €"),
       highlighted: false,
     },
   ];
