@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Loader2 } from "lucide-react";
-import { saveNoteAction } from "@/server/actions";
+import { useRouter } from "next/navigation";
+import { Check, Loader2, Network } from "lucide-react";
+import { convertNoteToCanvasAction, saveNoteAction } from "@/server/actions";
+import { Button } from "@/components/ui/button";
 
 // Bloc-notes plein écran avec enregistrement automatique (débounce 800 ms).
 export function NoteBoard({
@@ -12,10 +14,13 @@ export function NoteBoard({
   roadmapId: string;
   initialContent: string;
 }) {
+  const router = useRouter();
   const [content, setContent] = useState(initialContent);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">(
     "idle"
   );
+  const [converting, setConverting] = useState(false);
+  const [convertError, setConvertError] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSaved = useRef(initialContent);
 
@@ -45,26 +50,62 @@ export function NoteBoard({
 
   const words = content.trim() ? content.trim().split(/\s+/).length : 0;
 
+  // Convertit la note en Canvas : chaque ligne devient un bloc réorganisable.
+  async function convertToCanvas() {
+    setConvertError(null);
+    setConverting(true);
+    // On enregistre d'abord le texte le plus récent avant de convertir.
+    if (timer.current) clearTimeout(timer.current);
+    await save(content);
+    const r = await convertNoteToCanvasAction(roadmapId);
+    if (r.ok && r.data) {
+      router.push(`/dashboard/${r.data.id}`);
+    } else {
+      setConvertError(r.ok ? "Erreur inconnue" : r.error);
+      setConverting(false);
+    }
+  }
+
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between text-xs text-zinc-400">
-        <span>{words} mot{words > 1 ? "s" : ""}</span>
-        <span className="flex items-center gap-1.5">
-          {status === "saving" && (
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-3 text-xs text-zinc-400">
+          <span>{words} mot{words > 1 ? "s" : ""}</span>
+          <span className="flex items-center gap-1.5">
+            {status === "saving" && (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Enregistrement…
+              </>
+            )}
+            {status === "saved" && (
+              <>
+                <Check className="h-3.5 w-3.5 text-emerald-500" /> Enregistré
+              </>
+            )}
+            {status === "error" && (
+              <span className="text-red-500">Échec de l&apos;enregistrement</span>
+            )}
+          </span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={convertToCanvas}
+          disabled={converting}
+          title="Transforme chaque ligne de la note en bloc dans un nouveau Canvas"
+        >
+          {converting ? (
             <>
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Enregistrement…
+              <Loader2 className="h-4 w-4 animate-spin" /> Conversion…
+            </>
+          ) : (
+            <>
+              <Network className="h-4 w-4" /> Convertir en Canvas
             </>
           )}
-          {status === "saved" && (
-            <>
-              <Check className="h-3.5 w-3.5 text-emerald-500" /> Enregistré
-            </>
-          )}
-          {status === "error" && (
-            <span className="text-red-500">Échec de l&apos;enregistrement</span>
-          )}
-        </span>
+        </Button>
       </div>
+      {convertError && <p className="text-sm text-red-600">{convertError}</p>}
       <textarea
         value={content}
         onChange={(e) => onChange(e.target.value)}

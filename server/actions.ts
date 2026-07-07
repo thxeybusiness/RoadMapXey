@@ -12,6 +12,7 @@ import {
 } from "@/lib/validations";
 import { registerUser, deleteAccount } from "@/server/users";
 import {
+  convertNoteToCanvas,
   createDayBlock,
   createRoadmap,
   createRoadmapItem,
@@ -313,6 +314,20 @@ export async function saveNoteAction(
   try {
     await updateNoteContent(roadmapId, session.user.tenantId, content);
     return { ok: true };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+// Convertit une note en Canvas (chaque idée → un bloc). Renvoie l'id créé.
+export async function convertNoteToCanvasAction(
+  noteRoadmapId: string
+): Promise<ActionResult<{ id: string }>> {
+  const { userId, tenantId } = await requireUser();
+  try {
+    const id = await convertNoteToCanvas(noteRoadmapId, userId, tenantId);
+    revalidatePath("/dashboard");
+    return { ok: true, data: { id } };
   } catch (error) {
     return toError(error);
   }
