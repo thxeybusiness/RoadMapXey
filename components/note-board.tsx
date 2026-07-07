@@ -92,7 +92,7 @@ export function NoteBoard({
           size="sm"
           onClick={convertToCanvas}
           disabled={converting}
-          title="Transforme chaque ligne de la note en bloc dans un nouveau Canvas"
+          title="Analyse la note (titres, listes, cases, étapes) et génère un Canvas structuré : sujet au centre, thèmes en blocs reliés, sous-points en objectifs cochables"
         >
           {converting ? (
             <>
@@ -110,10 +110,24 @@ export function NoteBoard({
         value={content}
         onChange={(e) => onChange(e.target.value)}
         onBlur={() => save(content)}
-        placeholder="Écrivez vos notes ici… (enregistrement automatique)"
+        placeholder={
+          "Écrivez vos notes ici… (enregistrement automatique)\n\n" +
+          "Astuce pour la conversion en Canvas :\n" +
+          "# Sujet principal\n" +
+          "## Un thème\n" +
+          "- un sous-point (deviendra un objectif cochable)\n" +
+          "[x] une tâche déjà faite\n" +
+          "1. des étapes numérotées, reliées dans l'ordre"
+        }
         spellCheck
         className="min-h-[70vh] w-full resize-y rounded-2xl border border-amber-200 bg-white p-6 text-[15px] leading-relaxed text-zinc-800 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-300 dark:border-amber-900/60 dark:bg-zinc-950 dark:text-zinc-100"
       />
+      <p className="text-xs text-zinc-400">
+        Structurez avec <code># Titre</code>, <code>## Thème</code>,{" "}
+        <code>- point</code>, <code>[x] tâche</code>, <code>1. étape</code> — la
+        conversion en Canvas s&apos;appuie dessus : sujet au centre, thèmes en
+        blocs reliés, sous-points en objectifs, étapes chaînées.
+      </p>
     </div>
   );
 }
