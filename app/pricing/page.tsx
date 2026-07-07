@@ -10,8 +10,8 @@ export const metadata: Metadata = { title: "Forfaits" };
 // Identifiants de prix Stripe (mode Test). Ce ne sont pas des secrets
 // (ils transitent de toute façon côté client). Une variable d'environnement
 // du même nom, si définie, a la priorité — pratique pour basculer en Live.
-const DEFAULT_PRICE_PRO = "price_1TqIHeRwEaCwXVSNTqsOwlIG"; // 4 €/mois
-const DEFAULT_PRICE_BUSINESS = "price_1TqIIDRwEaCwXVSNkzdwZW7I"; // 9 €/mois
+const DEFAULT_PRICE_PRO = "price_1TqMgzRwEaCwXVSNikizTrGB"; // 4 €/mois
+const DEFAULT_PRICE_BUSINESS = "price_1TqMhCRwEaCwXVSN2VRudGYI"; // 9 €/mois
 
 export default function PricingPage() {
   const proPriceId =
