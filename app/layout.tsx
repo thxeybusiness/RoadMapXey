@@ -15,6 +15,11 @@ export const metadata: Metadata = {
     title: "RoadMap Business",
     statusBarStyle: "default",
   },
+  // iOS lit la variante préfixée « apple- » pour l'ouverture plein écran
+  // (Ajouter à l'écran d'accueil). On la force en plus du standard moderne.
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+  },
 };
 
 export const viewport: Viewport = {
