@@ -58,6 +58,7 @@ model Subscription {
   stripeSubscriptionId String?   @unique
   status               String    @default("inactive") // active | past_due | canceled | inactive
   plan                 String    @default("free") // free | premium
+  stripePriceId        String? // tarif souscrit — sert à distinguer Pro / Business
   currentPeriodEnd     DateTime?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt

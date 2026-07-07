@@ -32,6 +32,7 @@ async function syncSubscription(subscription: Stripe.Subscription) {
       plan: subscription.status === "active" || subscription.status === "trialing"
         ? "premium"
         : "free",
+      stripePriceId: subscription.items?.data?.[0]?.price?.id ?? null,
       currentPeriodEnd: getPeriodEnd(subscription),
     },
   });
@@ -70,6 +71,17 @@ export async function POST(req: Request) {
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user) break;
 
+        // Récupère le tarif souscrit pour distinguer Pro / Business.
+        let priceId: string | null = null;
+        if (subscriptionId) {
+          try {
+            const sub = await stripe.subscriptions.retrieve(subscriptionId);
+            priceId = sub.items.data[0]?.price.id ?? null;
+          } catch (error) {
+            console.error("[stripe webhook] récupération du tarif", error);
+          }
+        }
+
         await prisma.subscription.upsert({
           where: { userId },
           create: {
@@ -78,12 +90,14 @@ export async function POST(req: Request) {
             stripeSubscriptionId: subscriptionId ?? null,
             status: "active",
             plan: "premium",
+            stripePriceId: priceId,
           },
           update: {
             stripeCustomerId: customerId,
             stripeSubscriptionId: subscriptionId ?? null,
             status: "active",
             plan: "premium",
+            stripePriceId: priceId,
           },
         });
 

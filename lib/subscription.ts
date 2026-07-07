@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { hasUnlimitedAccess } from "@/lib/grades";
+import { tierFromPriceId, type Tier } from "@/lib/plans";
 import type { Plan } from "@/types";
 
 // Limites du plan gratuit — l'accès premium est TOUJOURS vérifié côté
@@ -32,4 +33,18 @@ export async function getUserPlan(userId: string): Promise<Plan> {
 
 export async function isPremium(userId: string): Promise<boolean> {
   return (await getUserPlan(userId)) === "premium";
+}
+
+// Niveau de forfait pour l'AFFICHAGE (Gratuit / Pro / Business / Premium).
+// Basé sur l'abonnement Stripe uniquement — les comptes à grade affichent
+// leur badge de grade séparément.
+export async function getBillingTier(userId: string): Promise<Tier> {
+  const sub = await prisma.subscription.findUnique({ where: { userId } });
+  const active =
+    sub &&
+    sub.plan === "premium" &&
+    (sub.status === "active" || sub.status === "trialing") &&
+    (!sub.currentPeriodEnd || sub.currentPeriodEnd > new Date());
+  if (!active) return "free";
+  return tierFromPriceId(sub!.stripePriceId) ?? "premium";
 }

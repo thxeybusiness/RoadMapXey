@@ -10,7 +10,8 @@ import {
   Table2,
 } from "lucide-react";
 import { requireUser } from "@/lib/session";
-import { getUserPlan, FREE_LIMITS } from "@/lib/subscription";
+import { getBillingTier, FREE_LIMITS } from "@/lib/subscription";
+import { TIER_LABEL } from "@/lib/plans";
 import { gradeOf, GRADE_LABEL } from "@/lib/grades";
 import { GradeBadge } from "@/components/grade-badge";
 import { listRoadmaps } from "@/server/roadmaps";
@@ -49,8 +50,8 @@ export default async function DashboardPage({
 }) {
   // Vérification serveur systématique — le proxy n'est qu'une garde UX.
   const { userId, tenantId, name, email } = await requireUser();
-  const [plan, roadmaps, params] = await Promise.all([
-    getUserPlan(userId),
+  const [tier, roadmaps, params] = await Promise.all([
+    getBillingTier(userId),
     listRoadmaps(tenantId),
     searchParams,
   ]);
@@ -66,7 +67,7 @@ export default async function DashboardPage({
     month: "long",
   }).format(new Date());
   const atLimit =
-    !grade && plan === "free" && roadmaps.length >= FREE_LIMITS.maxRoadmaps;
+    !grade && tier === "free" && roadmaps.length >= FREE_LIMITS.maxRoadmaps;
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 px-4 py-8">
@@ -107,12 +108,12 @@ export default async function DashboardPage({
             <GradeBadge grade={grade} />
           ) : (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-sm font-semibold text-white ring-1 ring-inset ring-white/25 backdrop-blur">
-              {plan === "premium" ? (
-                <>
-                  <Sparkles className="h-4 w-4" /> Premium
-                </>
-              ) : (
+              {tier === "free" ? (
                 "Plan gratuit"
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" /> {TIER_LABEL[tier]}
+                </>
               )}
             </span>
           )}
