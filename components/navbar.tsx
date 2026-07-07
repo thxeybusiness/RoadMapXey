@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { gradeOf } from "@/lib/grades";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/user-menu";
+import { InstallButton } from "@/components/install-button";
 
 export async function Navbar() {
   const session = await auth();
@@ -16,6 +17,7 @@ export async function Navbar() {
           RoadMap Business
         </Link>
         <div className="flex items-center gap-2">
+          <InstallButton />
           <Button asChild variant="ghost" size="sm">
             <Link href="/pricing">Forfaits</Link>
           </Button>
