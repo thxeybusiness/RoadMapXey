@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/session";
-import { signIn, signOut } from "@/lib/auth";
+import { auth, signIn, signOut } from "@/lib/auth";
 import {
   dayBlockSchema,
   roadmapItemSchema,
@@ -19,6 +19,7 @@ import {
   deleteRoadmap,
   deleteRoadmapItem,
   updateItemStatus,
+  updateNoteContent,
 } from "@/server/roadmaps";
 import {
   createTestEdge,
@@ -291,6 +292,26 @@ export async function deleteTestEdgeAction(edgeId: string): Promise<ActionResult
   const { tenantId } = await requireUser();
   try {
     await deleteTestEdge(edgeId, tenantId);
+    return { ok: true };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+// ── Bloc-notes (type note) ───────────────────────────────────────────────────
+
+export async function saveNoteAction(
+  roadmapId: string,
+  content: string
+): Promise<ActionResult> {
+  // Pas de redirect ici : une expiration de session en pleine saisie renvoie
+  // une erreur affichable au lieu de détourner la page.
+  const session = await auth();
+  if (!session?.user?.tenantId) {
+    return { ok: false, error: "Session expirée — reconnectez-vous" };
+  }
+  try {
+    await updateNoteContent(roadmapId, session.user.tenantId, content);
     return { ok: true };
   } catch (error) {
     return toError(error);
