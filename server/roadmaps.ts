@@ -101,6 +101,78 @@ export async function updateNoteContent(
   });
 }
 
+const NODE_COLORS = ["violet", "blue", "emerald", "amber", "rose", "cyan"];
+
+// Découpe le texte d'une note en idées : une ligne = un bloc. On retire les
+// marqueurs Markdown courants (titres #, puces -, numéros 1., cases [ ]).
+function parseNoteToBlocks(content: string): string[] {
+  return content
+    .split(/\r?\n/)
+    .map((line) =>
+      line
+        .replace(/^\s*(#{1,6}\s+|[-*+•]\s+|\d+[.)]\s+)/, "")
+        .replace(/^\s*\[[ xX]\]\s*/, "")
+        .trim()
+    )
+    .filter((line) => line.length > 0)
+    .slice(0, 60)
+    .map((line) => line.slice(0, 200));
+}
+
+// Convertit une note en un nouveau Canvas : chaque idée devient un bloc,
+// disposé en grille, prêt à être relié et réorganisé. La note est conservée.
+export async function convertNoteToCanvas(
+  noteRoadmapId: string,
+  userId: string,
+  tenantId: string
+): Promise<string> {
+  const note = await prisma.roadmap.findFirst({
+    where: { id: noteRoadmapId, tenantId },
+    select: { title: true, description: true, noteContent: true },
+  });
+  if (!note) throw new Error("Note introuvable");
+
+  const blocks = parseNoteToBlocks(note.noteContent ?? "");
+  if (blocks.length === 0) {
+    throw new Error("La note est vide — écrivez quelques idées avant de convertir.");
+  }
+
+  // Même limite d'abonnement que la création classique (une nouvelle roadmap).
+  if (!(await isPremium(userId))) {
+    const count = await prisma.roadmap.count({ where: { tenantId } });
+    if (count >= FREE_LIMITS.maxRoadmaps) {
+      throw new Error(
+        `Plan gratuit limité à ${FREE_LIMITS.maxRoadmaps} roadmap. Passez en Premium pour en créer plus.`
+      );
+    }
+  }
+
+  const canvas = await prisma.roadmap.create({
+    data: {
+      title: `${note.title} — Canvas`.slice(0, 200),
+      description: note.description,
+      type: "test",
+      tenantId,
+      createdById: userId,
+    },
+  });
+
+  const COLS = 4;
+  const GAP_X = 260;
+  const GAP_Y = 150;
+  await prisma.testNode.createMany({
+    data: blocks.map((title, i) => ({
+      roadmapId: canvas.id,
+      title,
+      x: 40 + (i % COLS) * GAP_X,
+      y: 40 + Math.floor(i / COLS) * GAP_Y,
+      color: NODE_COLORS[i % NODE_COLORS.length],
+    })),
+  });
+
+  return canvas.id;
+}
+
 export async function createRoadmapItem(
   userId: string,
   tenantId: string,
