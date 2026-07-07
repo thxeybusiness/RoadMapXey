@@ -24,6 +24,35 @@ export async function POST(req: Request) {
       where: { userId: session.user.id },
     });
 
+    // Changement de forfait : si un abonnement est déjà actif, on le MODIFIE
+    // au lieu d'en créer un second. Stripe facture immédiatement la
+    // différence au prorata du temps restant (et crédite en cas de downgrade).
+    if (
+      existing?.stripeSubscriptionId &&
+      (existing.status === "active" || existing.status === "trialing")
+    ) {
+      const subscription = await stripe.subscriptions.retrieve(
+        existing.stripeSubscriptionId
+      );
+      const item = subscription.items.data[0];
+      if (!item) throw new Error("Abonnement Stripe sans article");
+
+      if (item.price.id === parsed.data.priceId) {
+        return Response.json(
+          { error: "Vous êtes déjà sur ce forfait" },
+          { status: 400 }
+        );
+      }
+
+      await stripe.subscriptions.update(subscription.id, {
+        items: [{ id: item.id, price: parsed.data.priceId }],
+        proration_behavior: "always_invoice",
+        payment_behavior: "error_if_incomplete",
+      });
+
+      return Response.json({ upgraded: true });
+    }
+
     const checkout = await stripe.checkout.sessions.create({
       mode: "subscription",
       line_items: [{ price: parsed.data.priceId, quantity: 1 }],
