@@ -37,6 +37,7 @@ import {
   revokeInvitation,
 } from "@/server/team";
 import { setUsername } from "@/server/account";
+import { resetAccountToFree } from "@/server/admin";
 import type { ActionResult } from "@/types";
 
 // Server Actions : la seule porte d'entrée des mutations depuis l'UI.
@@ -384,6 +385,28 @@ export async function leaveTeamAction(): Promise<ActionResult> {
     revalidatePath("/dashboard");
     revalidatePath("/settings");
     return { ok: true };
+  } catch (error) {
+    return toError(error);
+  }
+}
+
+// ── Administration (Fondateur uniquement) ────────────────────────────────────
+
+export async function resetAccountToFreeAction(
+  formData: FormData
+): Promise<ActionResult<{ message: string }>> {
+  const { email } = await requireUser();
+  try {
+    const r = await resetAccountToFree(email, String(formData.get("email") ?? ""));
+    revalidatePath("/settings");
+    return {
+      ok: true,
+      data: {
+        message: r.hadSubscription
+          ? `${r.email} : abonnement annulé, compte repassé en gratuit.`
+          : `${r.email} était déjà en gratuit.`,
+      },
+    };
   } catch (error) {
     return toError(error);
   }
