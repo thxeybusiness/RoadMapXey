@@ -7,14 +7,10 @@ import { FREE_LIMITS } from "@/lib/subscription";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
+import { PRICE_IDS } from "@/lib/plans";
 
 export const metadata: Metadata = { title: "Forfaits" };
 
-// Identifiants de prix Stripe (mode Test). Ce ne sont pas des secrets
-// (ils transitent de toute façon côté client). Une variable d'environnement
-// du même nom, si définie, a la priorité — pratique pour basculer en Live.
-const DEFAULT_PRICE_PRO = "price_1TqMgzRwEaCwXVSNikizTrGB"; // 4 €/mois
-const DEFAULT_PRICE_BUSINESS = "price_1TqMhCRwEaCwXVSN2VRudGYI"; // 9 €/mois
 
 // Prix actuellement souscrit par l'utilisateur connecté (null sinon).
 async function getCurrentPriceId(): Promise<string | null> {
@@ -33,10 +29,8 @@ async function getCurrentPriceId(): Promise<string | null> {
 }
 
 export default async function PricingPage() {
-  const proPriceId =
-    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO ?? DEFAULT_PRICE_PRO;
-  const businessPriceId =
-    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_BUSINESS ?? DEFAULT_PRICE_BUSINESS;
+  const proPriceId = PRICE_IDS.pro;
+  const businessPriceId = PRICE_IDS.business;
   const currentPriceId = await getCurrentPriceId();
   const hasSub = currentPriceId !== null;
 

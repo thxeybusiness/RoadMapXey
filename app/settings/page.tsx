@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
-import { getUserPlan, isPremium } from "@/lib/subscription";
+import { getBillingTier, isPremium } from "@/lib/subscription";
+import { TIER_LABEL } from "@/lib/plans";
 import { gradeOf, GRADE_LABEL } from "@/lib/grades";
 import { getTeam, getReceivedInvitations } from "@/server/team";
 import { ensureUsername } from "@/server/account";
@@ -30,12 +31,12 @@ export default async function SettingsPage() {
   // Attribue un pseudo aux comptes historiques qui n'en auraient pas encore.
   const username = await ensureUsername(userId);
 
-  const [user, plan, team, canInvite, received] = await Promise.all([
+  const [user, tier, team, canInvite, received] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       include: { subscription: true, tenant: true },
     }),
-    getUserPlan(userId),
+    getBillingTier(userId),
     getTeam(tenantId),
     isPremium(userId),
     getReceivedInvitations(email, tenantId),
@@ -90,15 +91,15 @@ export default async function SettingsPage() {
             {grade ? (
               <GradeBadge grade={grade} />
             ) : (
-              <Badge variant={plan === "premium" ? "default" : "secondary"}>
-                {plan === "premium" ? "Premium" : "Gratuit"}
+              <Badge variant={tier !== "free" ? "default" : "secondary"}>
+                {TIER_LABEL[tier]}
               </Badge>
             )}
           </CardTitle>
           <CardDescription>
             {grade
               ? `Compte ${GRADE_LABEL[grade]} : accès illimité à toutes les fonctionnalités, sans abonnement.`
-              : plan === "premium"
+              : tier !== "free"
                 ? "Gérez votre abonnement, votre moyen de paiement et vos factures — ou annulez à tout moment."
                 : "Vous êtes sur le plan gratuit."}
           </CardDescription>
