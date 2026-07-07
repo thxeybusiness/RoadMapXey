@@ -6,8 +6,8 @@ import { stripe } from "@/lib/stripe";
 export const dynamic = "force-dynamic";
 
 const PRICES = {
-  pro: "price_1TqIHeRwEaCwXVSNTqsOwlIG",
-  business: "price_1TqIIDRwEaCwXVSNkzdwZW7I",
+  pro: "price_1TqMgzRwEaCwXVSNikizTrGB",
+  business: "price_1TqMhCRwEaCwXVSN2VRudGYI",
 };
 
 async function checkPrice(id: string) {
