@@ -3,10 +3,11 @@
 // par les variables d'environnement si définies (bascule Live facile).
 
 export const PRICE_IDS = {
-  pro: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO || "price_1TqMgzRwEaCwXVSNikizTrGB",
+  // Tarifs Live (production). Surchargeables par variable d'environnement.
+  pro: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO || "price_1TqIHeRwEaCwXVSNTqsOwlIG",
   business:
     process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_BUSINESS ||
-    "price_1TqMhCRwEaCwXVSN2VRudGYI",
+    "price_1TqIIDRwEaCwXVSNkzdwZW7I",
 } as const;
 
 export type Tier = "free" | "pro" | "business" | "premium";
