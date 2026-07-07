@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Loader2, Map, Network, Plus } from "lucide-react";
+import { Loader2, Map, Network, Plus, StickyNote } from "lucide-react";
 import { createRoadmapAction } from "@/server/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,13 @@ const TYPES = [
     hint: "Blocs & objectifs",
     Icon: Network,
     active: "border-violet-500 bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300",
+  },
+  {
+    value: "note",
+    label: "Note",
+    hint: "Bloc-notes",
+    Icon: StickyNote,
+    active: "border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300",
   },
 ] as const;
 
@@ -65,7 +72,7 @@ export function RoadmapForm() {
 
           <div className="space-y-2">
             <Label>Type</Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {TYPES.map(({ value, label, hint, Icon, active }) => {
                 const selected = type === value;
                 return (

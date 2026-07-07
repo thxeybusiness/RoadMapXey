@@ -76,7 +76,8 @@ model Roadmap {
   id          String        @id @default(cuid())
   title       String
   description String?
-  type        String        @default("board") // board (Tableau) | test (Canvas)
+  type        String        @default("board") // board (Tableau) | test (Canvas) | note
+  noteContent String? // contenu du bloc-notes (type note)
   tenantId    String
   tenant      Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   createdById String

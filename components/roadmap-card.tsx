@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Map, Network, ListChecks } from "lucide-react";
+import { ArrowUpRight, Map, Network, ListChecks, StickyNote } from "lucide-react";
 import { DeleteRoadmapButton } from "@/components/delete-roadmap-button";
 
 type RoadmapType = "board" | "test" | string;
@@ -21,6 +21,13 @@ const META: Record<
     chip: "bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300",
     bar: "from-violet-400 to-fuchsia-500",
     glow: "hover:shadow-violet-500/25",
+  },
+  note: {
+    label: "Note",
+    Icon: StickyNote,
+    chip: "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300",
+    bar: "from-amber-400 to-yellow-500",
+    glow: "hover:shadow-amber-500/25",
   },
 };
 

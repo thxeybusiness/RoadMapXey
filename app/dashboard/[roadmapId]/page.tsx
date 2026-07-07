@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/session";
 import { getRoadmap } from "@/server/roadmaps";
 import { RoadmapBoard } from "@/components/roadmap-board";
 import { NodeBoard } from "@/components/node-board";
+import { NoteBoard } from "@/components/note-board";
 import { ItemForm } from "@/components/item-form";
 import { Button } from "@/components/ui/button";
 
@@ -23,11 +24,18 @@ export default async function RoadmapPage({
   const roadmap = await getRoadmap(roadmapId, tenantId);
   if (!roadmap) notFound();
 
-  const typeLabel = roadmap.type === "test" ? "Canvas" : "Tableau";
+  const typeLabel =
+    roadmap.type === "test"
+      ? "Canvas"
+      : roadmap.type === "note"
+        ? "Note"
+        : "Tableau";
   const typeBadgeClass =
     roadmap.type === "test"
       ? "bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300"
-      : "bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300";
+      : roadmap.type === "note"
+        ? "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300"
+        : "bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -70,7 +78,12 @@ export default async function RoadmapPage({
 
       {/* Espace généreux entre l'en-tête et le contenu de la roadmap */}
       <div className="mt-12 space-y-6">
-        {roadmap.type === "test" ? (
+        {roadmap.type === "note" ? (
+          <NoteBoard
+            roadmapId={roadmap.id}
+            initialContent={roadmap.noteContent ?? ""}
+          />
+        ) : roadmap.type === "test" ? (
           <NodeBoard
             roadmapId={roadmap.id}
             initialNodes={roadmap.testNodes.map((n) => ({

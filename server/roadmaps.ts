@@ -89,6 +89,18 @@ export async function deleteRoadmap(id: string, tenantId: string) {
   await prisma.roadmap.deleteMany({ where: { id, tenantId } });
 }
 
+// Enregistre le contenu d'un bloc-notes (type note). Scopé au tenant.
+export async function updateNoteContent(
+  roadmapId: string,
+  tenantId: string,
+  content: string
+) {
+  await prisma.roadmap.updateMany({
+    where: { id: roadmapId, tenantId },
+    data: { noteContent: content.slice(0, 100_000) },
+  });
+}
+
 export async function createRoadmapItem(
   userId: string,
   tenantId: string,

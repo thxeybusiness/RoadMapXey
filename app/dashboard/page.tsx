@@ -7,6 +7,7 @@ import {
   Map,
   Network,
   Sparkles,
+  StickyNote,
   Table2,
 } from "lucide-react";
 import { requireUser } from "@/lib/session";
@@ -36,6 +37,12 @@ const CATEGORIES = [
     label: "Canvas",
     Icon: Network,
     chip: "bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300",
+  },
+  {
+    type: "note",
+    label: "Note",
+    Icon: StickyNote,
+    chip: "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300",
   },
 ] as const;
 
