@@ -30,7 +30,14 @@ export function CheckoutButton({
         return;
       }
       const data = await res.json();
-      if (!res.ok || !data.url) throw new Error(data.error ?? "Erreur inconnue");
+      if (!res.ok) throw new Error(data.error ?? "Erreur inconnue");
+      // Changement de forfait au prorata : pas de page de paiement,
+      // l'abonnement existant a été modifié — retour au dashboard.
+      if (data.upgraded) {
+        window.location.href = "/dashboard?success=true";
+        return;
+      }
+      if (!data.url) throw new Error(data.error ?? "Erreur inconnue");
       window.location.href = data.url;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Une erreur est survenue");

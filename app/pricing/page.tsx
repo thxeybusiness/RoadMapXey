@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Check, Sparkles } from "lucide-react";
+import { BadgeCheck, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CheckoutButton } from "@/components/checkout-button";
 import { FREE_LIMITS } from "@/lib/subscription";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { stripe } from "@/lib/stripe";
 
 export const metadata: Metadata = { title: "Forfaits" };
 
@@ -13,11 +16,46 @@ export const metadata: Metadata = { title: "Forfaits" };
 const DEFAULT_PRICE_PRO = "price_1TqMgzRwEaCwXVSNikizTrGB"; // 4 €/mois
 const DEFAULT_PRICE_BUSINESS = "price_1TqMhCRwEaCwXVSN2VRudGYI"; // 9 €/mois
 
-export default function PricingPage() {
+// Prix actuellement souscrit par l'utilisateur connecté (null sinon).
+async function getCurrentPriceId(): Promise<string | null> {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+  const sub = await prisma.subscription.findUnique({
+    where: { userId: session.user.id },
+  });
+  if (!sub?.stripeSubscriptionId || sub.status !== "active") return null;
+  try {
+    const s = await stripe.subscriptions.retrieve(sub.stripeSubscriptionId);
+    return s.items.data[0]?.price.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export default async function PricingPage() {
   const proPriceId =
     process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO ?? DEFAULT_PRICE_PRO;
   const businessPriceId =
     process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_BUSINESS ?? DEFAULT_PRICE_BUSINESS;
+  const currentPriceId = await getCurrentPriceId();
+  const hasSub = currentPriceId !== null;
+
+  // CTA d'un forfait payant selon la situation : déjà souscrit, changement
+  // au prorata, ou première souscription.
+  function paidCta(priceId: string, label: string) {
+    if (currentPriceId === priceId) {
+      return (
+        <Button variant="outline" className="w-full" disabled>
+          <BadgeCheck className="h-4 w-4" /> Votre forfait actuel
+        </Button>
+      );
+    }
+    return (
+      <CheckoutButton priceId={priceId}>
+        {hasSub ? "Changer pour ce forfait" : label}
+      </CheckoutButton>
+    );
+  }
 
   const plans = [
     {
@@ -52,13 +90,7 @@ export default function PricingPage() {
       ],
       bar: "from-emerald-400 to-teal-500",
       check: "text-emerald-600",
-      cta: proPriceId ? (
-        <CheckoutButton priceId={proPriceId}>Passer en Pro</CheckoutButton>
-      ) : (
-        <Button variant="primary" className="w-full" disabled>
-          Bientôt disponible
-        </Button>
-      ),
+      cta: paidCta(proPriceId, "Passer en Pro"),
       highlighted: true,
     },
     {
@@ -74,15 +106,7 @@ export default function PricingPage() {
       ],
       bar: "from-emerald-600 to-green-800",
       check: "text-emerald-700",
-      cta: businessPriceId ? (
-        <CheckoutButton priceId={businessPriceId}>
-          Passer en Business
-        </CheckoutButton>
-      ) : (
-        <Button className="w-full" disabled>
-          Bientôt disponible
-        </Button>
-      ),
+      cta: paidCta(businessPriceId, "Passer en Business"),
       highlighted: false,
     },
   ];
@@ -164,7 +188,9 @@ export default function PricingPage() {
       </div>
 
       <p className="text-center text-sm text-zinc-500">
-        Sans engagement · Annulable à tout moment · Paiement sécurisé Stripe
+        Sans engagement · Annulable à tout moment · Paiement sécurisé Stripe ·
+        Changement de forfait facturé au prorata (vous ne payez que la
+        différence)
       </p>
     </div>
   );
