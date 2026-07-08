@@ -181,7 +181,7 @@ export default async function DashboardPage({
               <ArrowRight className="mt-4 hidden h-5 w-5 animate-pulse text-emerald-500 lg:block" />
             </div>
           ) : (
-            <div className="grid items-start gap-5 sm:grid-cols-2">
+            <div className="grid items-start gap-4 sm:grid-cols-3">
               {(() => {
               let idx = 0;
               return CATEGORIES.map((cat) => {
