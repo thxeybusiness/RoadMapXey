@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { requireUser } from "@/lib/session";
 import { auth, signIn, signOut } from "@/lib/auth";
+import { recordAttempt, tooManyAttempts } from "@/lib/rate-limit";
 import {
   dayBlockSchema,
   roadmapItemSchema,
@@ -53,6 +55,12 @@ function toError(error: unknown): { ok: false; error: string } {
   };
 }
 
+// Adresse IP de l'appelant (derrière le proxy Vercel).
+async function callerIp(): Promise<string> {
+  const h = await headers();
+  return (h.get("x-forwarded-for")?.split(",")[0] ?? "unknown").trim();
+}
+
 export async function signupAction(formData: FormData): Promise<ActionResult> {
   const parsed = signupSchema.safeParse({
     name: formData.get("name"),
@@ -62,6 +70,16 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message };
   }
+
+  // Anti-création massive de comptes : max 6 inscriptions / heure / IP.
+  const ipKey = `signup:${await callerIp()}`;
+  if (await tooManyAttempts(ipKey, 6, 60 * 60 * 1000)) {
+    return {
+      ok: false,
+      error: "Trop d'inscriptions depuis ce réseau. Réessayez plus tard.",
+    };
+  }
+  await recordAttempt(ipKey);
 
   try {
     await registerUser(parsed.data);
