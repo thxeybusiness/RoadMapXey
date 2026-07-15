@@ -50,6 +50,17 @@ model User {
   @@index([tenantId])
 }
 
+// Anti-force brute : on enregistre les tentatives (login, inscription) par
+// clé (email, IP) pour bloquer au-delà d'un seuil sur une fenêtre glissante.
+// Stocké en base → fiable même en serverless (plusieurs instances).
+model LoginAttempt {
+  id         String   @id @default(cuid())
+  identifier String
+  createdAt  DateTime @default(now())
+
+  @@index([identifier, createdAt])
+}
+
 model Subscription {
   id                   String    @id @default(cuid())
   userId               String    @unique
